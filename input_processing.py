@@ -16,6 +16,13 @@ throat_bevel_radius = inputs.throat_bevel_radius
 chamber_bevel_radius = inputs.chamber_bevel_radius
 
 """
+Cooling properties
+"""
+inner_wall_thickness = inputs.inner_wall_thickness
+channel_thickness = inputs.channel_thickness
+wall_thermal_conductivity = inputs.wall_thermal_conductivity
+
+"""
 NASA CEARUN unit conversions & c-star
 """
 chamber_pressure = inputs.chamber_pressure * 100000  # pascal
@@ -36,6 +43,13 @@ bounds.append(bounds[1] + (chamber_radius + chamber_bevel_radius * math.cos(conv
                            - chamber_bevel_radius - throat_radius - throat_bevel_radius + throat_bevel_radius
                            * math.cos(converging_half_angle)) / math.tan(converging_half_angle))
 bounds.append(bounds[2] + throat_bevel_radius * (math.sin(diverging_half_angle) + math.sin(converging_half_angle)))
+bounds.append(bounds[3] + (exit_radius - (throat_radius + throat_bevel_radius - throat_bevel_radius * math.cos(diverging_half_angle))) / math.tan(diverging_half_angle) )
+
+"""
+High level processing
+"""
+num_stations = inputs.num_stations
+station_length = bounds[4] / num_stations
 
 """
 Calculate throat position for convenience
