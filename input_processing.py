@@ -28,7 +28,7 @@ NASA CEARUN unit conversions & c-star
 chamber_pressure = inputs.chamber_pressure * 100000  # pascal
 chamber_temperature = inputs.chamber_temperature  # kelvin
 gamma = inputs.gamma  # unitless
-viscosity = inputs.viscosity / 1000  # poise
+viscosity = inputs.viscosity / 10000  # Pa s
 specific_heat = inputs.specific_heat  # J / (g K)
 prandtl_number = inputs.prandtl_number  # unitless
 

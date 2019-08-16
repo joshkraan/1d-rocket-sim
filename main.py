@@ -1,4 +1,5 @@
 import math
+from CoolProp.CoolProp import PropsSI
 import numpy
 import matplotlib.pyplot
 
@@ -105,16 +106,42 @@ def calculate_heat_balance(x, coolant_properties):
         else:
             gas_wall_temp += step_size
 
-def update_coolant_props():
-    #TODO
 
-# Initialize coolant properties here:
+# Calculates coolant properties at next station
+def update_coolant_props(station):
+    enthalpy_change = 100  # TODO
+    pressure_drop = 10 # TODO probably needs a function
+    cool_props[station + 1][0] = cool_props[station][0] + enthalpy_change
+    cool_props[station + 1][1] = cool_props[station][1] - pressure_drop
+    cool_props[station + 1][2] = PropsSI('T', 'H', cool_props[station + 1][0], 'P', cool_props[station + 1][1], "n-Decane")
+    cool_props[station + 1][3] = PropsSI('D', 'H', cool_props[station + 1][0], 'P', cool_props[station + 1][1], "n-Decane")
+    cool_props[station + 1][4] = # TODO velocity
+    cool_props[station + 1][5] = PropsSI('V', 'H', cool_props[station + 1][0], 'P', cool_props[station + 1][1], "n-Decane")
+    cool_props[station + 1][6] = PropsSI('C', 'H', cool_props[station + 1][0], 'P', cool_props[station + 1][1], "n-Decane")
+    cool_props[station + 1][7] = PropsSI('L', 'H', cool_props[station + 1][0], 'P', cool_props[station + 1][1], "n-Decane")
+
+# Initialize coolant properties
+fluid = "n-Decane"
+input_pressure = 101325 # TODO
+input_temperature = 300 # TODO
+
+cool_props = [[0 for x in range(7)] for y in range(num_stations)]
+cool_props[0][0] = PropsSI('H', 'P', input_pressure, 'T', input_temperature, fluid)  # Stagnation enthalpy
+cool_props[0][1] = input_pressure  # Pressure
+cool_props[0][2] = input_temperature  # Temperature
+cool_props[0][3] = PropsSI('D', 'P', input_pressure, 'T', input_temperature, fluid)  # Density
+cool_props[0][4] = # TODO calculate velocity
+cool_props[0][5] = PropsSI('V', 'P', input_pressure, 'T', input_temperature, fluid) # Viscosity
+cool_props[0][6] = PropsSI('C', 'P', input_pressure, 'T', input_temperature, fluid) # Heat capacity
+cool_props[0][7] = PropsSI('L', 'P', input_pressure, 'T', input_temperature, fluid) # Thermal conductivity
+
+
 
 for i in range(1, num_stations + 1):
     # Starting from nozzle end
     position = bounds[4] - i * station_length
-    calculate_heat_balance(position, #coolant properties)
-    update_coolant_props()
+    calculate_heat_balance(position, cool_props)
+    update_coolant_props(i)
 
 
 # test = numpy.arange(0, 0.7, 0.001)
