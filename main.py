@@ -68,6 +68,8 @@ def adiabatic_wall_temp(x):
     a = 1 + recovery_factor * (gamma - 1) / 2 * local_mach ** 2
     b = 1 + (gamma - 1) / 2 * local_mach ** 2
 
+    print(chamber_temperature * (a / b))
+
     return chamber_temperature * (a / b)
 
 
@@ -77,7 +79,7 @@ def gas_transfer_coefficient(x, gas_wall_temp):
     sigma = 1/((0.5 * (gas_wall_temp / chamber_temperature) * a + 0.5) ** 0.68 * a ** 0.12)
 
     return 0.026 / (throat_radius * 2) ** 0.2 * viscosity ** 0.2 * specific_heat / prandtl_number ** 0.6\
-           * (chamber_pressure * 9.8 / characteristic_velocity) ** 0.8 * (throat_radius * 2 / throat_bevel_radius) ** 0.1 * (1 / area_ratio(x)) ** 0.9 * sigma
+           * (chamber_pressure / characteristic_velocity) ** 0.8 * (throat_radius * 2 / throat_bevel_radius) ** 0.1 * (1 / area_ratio(x)) ** 0.9 * sigma
 
 
 def channel_height(x):
@@ -96,14 +98,14 @@ def coolant_transfer_coefficient(station, coolant_wall_temp, coolant_properties)
 
 def calculate_heat_balance(station, coolant_properties, data):
     # Initial guesses for gas wall temp and coolant temp, well below actual
-    gas_wall_temp = 300
+    gas_wall_temp = 1000
     coolant_temp = 250
 
     x = bounds[4] - station * station_length
 
     q = 5
 
-    step_size = 1
+    step_size = 100
     while abs(coolant_properties[station][2] - coolant_temp) > 0.00001:
         q = gas_transfer_coefficient(x, gas_wall_temp) * station_length * 2 * math.pi * inner_radius(x) * (adiabatic_wall_temp(x) - gas_wall_temp)  # TODO update latex document with changes
         conduction_resistance = math.log((inner_radius(x) + inner_wall_thickness) / inner_radius(x)) / (2 * math.pi * station_length * wall_thermal_conductivity)
@@ -115,6 +117,8 @@ def calculate_heat_balance(station, coolant_properties, data):
             step_size /= 10
         else:
             gas_wall_temp += step_size
+
+    print(gas_wall_temp)
 
     data[station][0] = gas_wall_temp
     data[station][1] = q
@@ -197,10 +201,16 @@ for i in range(num_stations - 1):
     update_coolant_props(i, cool_props, heat_data)
 
 plt.scatter([bounds[4] - station_length * station for station in range(num_stations)], [row[1] for row in cool_props])
+plt.title("Coolant Pressure")
 plt.show()
 
-plt.scatter([bounds[4] - station_length * station - bounds[4] for station in range(num_stations)], [row[2] for row in cool_props])
+plt.scatter([bounds[4] - station_length * station for station in range(num_stations)], [row[2] for row in cool_props])
+plt.title("Coolant Temperature")
 plt.show()
 
-plt.scatter([bounds[4] - station_length * station - bounds[4] for station in range(num_stations)], [row[1] for row in heat_data])
+plt.scatter([bounds[4] - station_length * station for station in range(num_stations)], [row[0] for row in heat_data])
+plt.title("Heat Flux")
 plt.show()
+
+# plt.scatter([bounds[4] - station_length * station for station in range(num_stations)], [gas_transfer_coefficient(bounds[4] - station_length * station, 400) for station in range(num_stations)])
+# plt.show()

@@ -33,7 +33,7 @@ chamber_pressure = inputs.chamber_pressure * 100000  # pascal
 chamber_temperature = inputs.chamber_temperature  # kelvin
 gamma = inputs.gamma  # unitless
 viscosity = inputs.viscosity / 10000  # Pa s
-specific_heat = inputs.specific_heat  # J / (g K)
+specific_heat = inputs.specific_heat * 1000  # J / (kg K)
 prandtl_number = inputs.prandtl_number  # unitless
 
 characteristic_velocity = chamber_pressure * math.pi * throat_radius ** 2 / (inputs.fuel_flow_rate + inputs.ox_flow_rate)  # m/s
