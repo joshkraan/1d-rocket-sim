@@ -16,11 +16,14 @@ throat_bevel_radius = 0.05
 chamber_bevel_radius = 0.05
 
 """
-Double-wall cooling parameters (meters)
+Double-wall cooling parameters
 """
-inner_wall_thickness = 0.01
-channel_thickness = 0.01
+inner_wall_thickness = 0.005  # m
+channel_percentage = 1  # channel height as a % of chamber diameter
 wall_thermal_conductivity = 401  # W / (m K)
+surface_roughness = 0.001  # mm
+fuel_input_pressure = 1820000  # Pa
+fuel_input_temperature = 300  # k
 
 """
 CEARUN Results
@@ -35,4 +38,5 @@ prandtl_number = 0.4364  # unitless
 """
 Miscellaneous inputs
 """
-mass_flow_rate = 8.12  # kg/s
+fuel_flow_rate = 2.47  # kg/s
+ox_flow_rate = 5.65  # kg/s

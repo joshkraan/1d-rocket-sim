@@ -19,8 +19,12 @@ chamber_bevel_radius = inputs.chamber_bevel_radius
 Cooling properties
 """
 inner_wall_thickness = inputs.inner_wall_thickness
-channel_thickness = inputs.channel_thickness
+channel_percent = inputs.channel_percentage
 wall_thermal_conductivity = inputs.wall_thermal_conductivity
+coolant_flow_rate = inputs.fuel_flow_rate
+surface_roughness = inputs.surface_roughness / 1000
+fuel_input_pressure = inputs.fuel_input_pressure
+fuel_input_temperature = inputs.fuel_input_temperature
 
 """
 NASA CEARUN unit conversions & c-star
@@ -32,7 +36,7 @@ viscosity = inputs.viscosity / 10000  # Pa s
 specific_heat = inputs.specific_heat  # J / (g K)
 prandtl_number = inputs.prandtl_number  # unitless
 
-characteristic_velocity = chamber_pressure * math.pi * throat_radius ** 2 / inputs.mass_flow_rate  # m/s
+characteristic_velocity = chamber_pressure * math.pi * throat_radius ** 2 / (inputs.fuel_flow_rate + inputs.ox_flow_rate)  # m/s
 
 """
 Bounds separating sections of chamber
