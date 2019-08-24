@@ -18,7 +18,7 @@ chamber_bevel_radius = 0.05
 """
 Double-wall cooling parameters
 """
-inner_wall_thickness = 0.005  # m
+inner_wall_thickness = 0.0016  # m
 channel_percentage = 1  # channel height as a % of chamber diameter
 wall_thermal_conductivity = 401  # W / (m K)
 surface_roughness = 0.001  # mm

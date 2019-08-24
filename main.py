@@ -68,8 +68,6 @@ def adiabatic_wall_temp(x):
     a = 1 + recovery_factor * (gamma - 1) / 2 * local_mach ** 2
     b = 1 + (gamma - 1) / 2 * local_mach ** 2
 
-    print(chamber_temperature * (a / b))
-
     return chamber_temperature * (a / b)
 
 
@@ -89,7 +87,7 @@ def channel_height(x):
 def coolant_transfer_coefficient(station, coolant_wall_temp, coolant_properties):
     x = bounds[4] - station * station_length
     hydraulic_diameter = channel_height(x)  # TODO
-    coolant_wall_viscosity = PropsSI('V', 'T', coolant_wall_temp, 'P', coolant_properties[station][1], "n-Decane")
+    coolant_wall_viscosity = PropsSI('V', 'T', coolant_wall_temp, 'P', coolant_properties[station][1], "Water")
     re = coolant_properties[station][3] * coolant_properties[station][4] * hydraulic_diameter / coolant_properties[station][5]
     pr = coolant_properties[station][5] * coolant_properties[station][6] / coolant_properties[station][7]
     nu = 0.027 * re ** 0.8 * pr ** (1/3) * (coolant_properties[station][5] / coolant_wall_viscosity) ** 0.14
@@ -98,7 +96,7 @@ def coolant_transfer_coefficient(station, coolant_wall_temp, coolant_properties)
 
 def calculate_heat_balance(station, coolant_properties, data):
     # Initial guesses for gas wall temp and coolant temp, well below actual
-    gas_wall_temp = 1000
+    gas_wall_temp = 800
     coolant_temp = 250
 
     x = bounds[4] - station * station_length
@@ -118,7 +116,7 @@ def calculate_heat_balance(station, coolant_properties, data):
         else:
             gas_wall_temp += step_size
 
-    print(gas_wall_temp)
+    print("q = ", q)
 
     data[station][0] = gas_wall_temp
     data[station][1] = q
@@ -169,16 +167,24 @@ def update_coolant_props(station, coolant_properties, data):
     pressure_drop = coolant_pressure_drop(station, coolant_properties)
     coolant_properties[station + 1][0] = coolant_properties[station][0] + enthalpy_change
     coolant_properties[station + 1][1] = coolant_properties[station][1] - pressure_drop
-    coolant_properties[station + 1][2] = PropsSI('T', 'H', coolant_properties[station + 1][0], 'P', coolant_properties[station + 1][1], "n-Decane")
-    coolant_properties[station + 1][3] = PropsSI('D', 'H', coolant_properties[station + 1][0], 'P', coolant_properties[station + 1][1], "n-Decane")
-    coolant_properties[station + 1][4] = coolant_flow_rate / (cool_props[0][3] * coolant_area(bounds[4] - station * station_length))
-    coolant_properties[station + 1][5] = PropsSI('V', 'H', coolant_properties[station + 1][0], 'P', coolant_properties[station + 1][1], "n-Decane")
-    coolant_properties[station + 1][6] = PropsSI('C', 'H', coolant_properties[station + 1][0], 'P', coolant_properties[station + 1][1], "n-Decane")
-    coolant_properties[station + 1][7] = PropsSI('L', 'H', coolant_properties[station + 1][0], 'P', coolant_properties[station + 1][1], "n-Decane")
+    coolant_properties[station + 1][2] = PropsSI('T', 'H', coolant_properties[station + 1][0], 'P', coolant_properties[station + 1][1], "Water")
+    coolant_properties[station + 1][3] = PropsSI('D', 'H', coolant_properties[station + 1][0], 'P', coolant_properties[station + 1][1], "Water")
+    coolant_properties[station + 1][4] = coolant_flow_rate / (coolant_properties[station][3] * coolant_area(bounds[4] - station * station_length))
+    coolant_properties[station + 1][5] = PropsSI('V', 'H', coolant_properties[station + 1][0], 'P', coolant_properties[station + 1][1], "Water")
+    coolant_properties[station + 1][6] = PropsSI('C', 'H', coolant_properties[station + 1][0], 'P', coolant_properties[station + 1][1], "Water")
+    print(coolant_properties[station + 1][6])
+    coolant_properties[station + 1][7] = PropsSI('L', 'H', coolant_properties[station + 1][0], 'P', coolant_properties[station + 1][1], "Water")
+
+
+def calculate_stress(x, temp):
+    max_stress = (fuel_input_pressure - chamber_pressure) * inner_radius(x) / inner_wall_thickness  # TODO pressures (propagate), thermal etc
+    yield_strength = 1570.3 - 14.184 * temp + 5.6410 * 10 ** (-2) * temp ** 2 - 1.0592 * 10 ** (-4) * temp ** 3 + 9.2881 * 10 ** (-8) * temp ** 4 - 3.086 * 10 ** (-11) * temp ** 5
+    print("stress = ", max_stress / 1000000)
+    print("yield strength = ", yield_strength)
 
 
 # Initialize coolant properties
-fluid = "n-Decane"
+fluid = "Water"
 input_pressure = fuel_input_pressure
 input_temperature = fuel_input_temperature
 
@@ -208,9 +214,15 @@ plt.scatter([bounds[4] - station_length * station for station in range(num_stati
 plt.title("Coolant Temperature")
 plt.show()
 
-plt.scatter([bounds[4] - station_length * station for station in range(num_stations)], [row[0] for row in heat_data])
+plt.scatter([bounds[4] - station_length * station for station in range(num_stations)], [row[1] for row in heat_data])
 plt.title("Heat Flux")
 plt.show()
 
-# plt.scatter([bounds[4] - station_length * station for station in range(num_stations)], [gas_transfer_coefficient(bounds[4] - station_length * station, 400) for station in range(num_stations)])
-# plt.show()
+plt.scatter([bounds[4] - station_length * station for station in range(num_stations)], [row[0] for row in heat_data])
+plt.title("Wall temp")
+plt.show()
+
+plt.scatter([bounds[4] - station_length * station for station in range(num_stations)], [gas_transfer_coefficient(bounds[4] - station_length * station, 400) for station in range(num_stations)])
+plt.show()
+
+# calculate_stress(0.2, 300)
