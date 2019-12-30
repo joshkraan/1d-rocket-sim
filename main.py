@@ -20,7 +20,7 @@ from input_processing import (
 
 
 def density(temperature):
-    return -7.35246E-13*temperature**66 + 1.89632E-09*temperature**65 - 2.01450E-06*temperature**64 + 1.12544E-03*temperature**63 - 3.48382E-01*temperature**62 + 5.59004E+01*temperature - 2.75598E+03
+    return -7.35246E-13*temperature**6 + 1.89632E-09*temperature**5 - 2.01450E-06*temperature**4 + 1.12544E-03*temperature**3 - 3.48382E-01*temperature**2 + 5.59004E+01*temperature - 2.75598E+03
 
 
 def specific_heat(temperature):
@@ -114,7 +114,7 @@ def test(station, data):
 
     # Calculate the coolant transfer coefficient
     def coolant_transfer_coefficient1(wall_temp):
-        hydraulic_diameter = channel_height  # TODO CHECK THAT THIS IS TRUE (annulus)
+        hydraulic_diameter = 2 * channel_height  # TODO CHECK THAT THIS IS TRUE (annulus)
         coolant_wall_viscosity = viscosity(wall_temp)
         if coolant_wall_viscosity < 0:
             raise Exception('Try adjusting your guesses, out of range of fitted data')
@@ -150,34 +150,31 @@ def test(station, data):
     # Storing Calculated Values
     data[station][1] = gas_wall_temp
     data[station][2] = q
-    data[station][4] = adiabatic_wall_temp1
-
-
+    data[station][4] = gas_transfer_coefficient1(gas_wall_temp) * (adiabatic_wall_temp1 - gas_wall_temp)
     # Enthalpy of station + 1 is current station enthalpy plus change in enthalpy
     data[station + 1][3] = data[station][3] + q / coolant_flow_rate
 
 
 # Actual Code
-
 calc_data = [[0 for x in range(8)] for y in range(num_stations+1)]
 calc_data[0][0] = fuel_input_temperature
 calc_data[0][3] = fuel_input_enthalpy
 
 # This is the array for storing calculated data at each station
-# Column 0 is Temperature of Fluid
-# Column 1 is Gas Wall Temp
-# Column 2 is Heat Flux
-# Column 3 is Enthalpy
+# Column 0 is Temperature of Fluid (k)
+# Column 1 is Gas Wall Temp (k)
+# Column 2 is Heat Transfer (W)
+# Column 3 is Enthalpy (J/Kg)
 
 for i in range(num_stations):
     test(i, calc_data)
 
 fig = plt.figure()
 ax1 = fig.add_subplot(211)
-ax1 = plt.scatter([bounds[4]-station_length*station for station in range(num_stations+1)], [row[1] for row in calc_data])
+ax1 = plt.scatter([bounds[4]-station_length*station for station in range(num_stations+1)], [row[4] for row in calc_data])
 
 ax2 = fig.add_subplot(212)
-ax2 = plt.scatter([bounds[4]-station_length*station for station in range(num_stations+1)], [row[4] for row in calc_data])
+ax2 = plt.scatter([bounds[4]-station_length*station for station in range(num_stations+1)], [row[1] for row in calc_data])
 
 plt.show()
 
