@@ -20,6 +20,7 @@ Cooling properties
 """
 inner_wall_thickness = inputs.inner_wall_thickness
 channel_percent = inputs.channel_percentage
+channel_height = inputs.channel_height
 wall_thermal_conductivity = inputs.wall_thermal_conductivity
 coolant_flow_rate = inputs.fuel_flow_rate
 surface_roughness = inputs.surface_roughness / 1000
@@ -31,10 +32,10 @@ NASA CEARUN unit conversions & c-star
 """
 chamber_pressure = inputs.chamber_pressure * 100000  # pascal
 chamber_temperature = inputs.chamber_temperature  # kelvin
-gamma = inputs.gamma  # unitless
-viscosity = inputs.viscosity / 10000  # Pa s
-specific_heat = inputs.specific_heat * 1000  # J / (kg K)
-prandtl_number = inputs.prandtl_number  # unitless
+gas_gamma = inputs.gamma  # unitless
+gas_viscosity = inputs.viscosity / 10000  # Pa s
+gas_specific_heat = inputs.specific_heat * 1000  # J / (kg K)
+gas_prandtl_number = inputs.prandtl_number  # unitless
 
 characteristic_velocity = chamber_pressure * math.pi * throat_radius ** 2 / (inputs.fuel_flow_rate + inputs.ox_flow_rate)  # m/s
 
@@ -54,8 +55,11 @@ High level processing
 """
 num_stations = inputs.num_stations
 station_length = bounds[4] / num_stations
+guess_for_exit_heat_flux = inputs.guess_for_exit_heat_flux
+guess_for_exit_wall_temp = inputs.guess_for_exit_wall_temp
 
 """
 Calculate throat position for convenience
 """
 throat_position = chamber_length + chamber_bevel_radius * math.sin(converging_half_angle) + (chamber_radius + chamber_bevel_radius * math.cos(converging_half_angle) - chamber_bevel_radius - throat_radius - throat_bevel_radius + throat_bevel_radius * math.cos(converging_half_angle)) / math.tan(converging_half_angle) + throat_bevel_radius * math.sin(converging_half_angle)
+fuel_input_enthalpy = inputs.input_enthalpy
