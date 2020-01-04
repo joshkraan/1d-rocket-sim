@@ -19,7 +19,6 @@ chamber_bevel_radius = inputs.chamber_bevel_radius
 Cooling properties
 """
 inner_wall_thickness = inputs.inner_wall_thickness
-channel_percent = inputs.channel_percentage
 channel_height = inputs.channel_height
 wall_thermal_conductivity = inputs.wall_thermal_conductivity
 coolant_flow_rate = inputs.fuel_flow_rate
@@ -55,7 +54,6 @@ High level processing
 """
 num_stations = inputs.num_stations
 station_length = bounds[4] / num_stations
-guess_for_exit_heat_flux = inputs.guess_for_exit_heat_flux
 guess_for_exit_wall_temp = inputs.guess_for_exit_wall_temp
 
 """

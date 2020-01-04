@@ -9,7 +9,7 @@ from input_processing import (
     throat_radius, diverging_half_angle, converging_half_angle,
     chamber_length, chamber_radius, throat_bevel_radius, chamber_bevel_radius,
     # Cooling
-    inner_wall_thickness, channel_percent, channel_height, wall_thermal_conductivity,
+    inner_wall_thickness, channel_height, wall_thermal_conductivity,
     coolant_flow_rate, surface_roughness, fuel_input_pressure, fuel_input_temperature,
     # Combustion gas properties
     gas_gamma, gas_viscosity, gas_specific_heat, gas_prandtl_number,
@@ -18,7 +18,7 @@ from input_processing import (
     # Bounds
     bounds, throat_position,
     # High level
-    num_stations, station_length, fuel_input_enthalpy, guess_for_exit_heat_flux, guess_for_exit_wall_temp
+    num_stations, station_length, fuel_input_enthalpy, guess_for_exit_wall_temp
 )
 
 
@@ -148,7 +148,7 @@ def test(station, data):
     conduction_resistance = math.log((radius + inner_wall_thickness) / radius) / (2 * math.pi * station_length * wall_thermal_conductivity)
 
     def heat_flux(gas_wall_temp):
-        return gas_transfer_coefficient(gas_wall_temp)* (adiabatic_wall_temp - gas_wall_temp)
+        return gas_transfer_coefficient(gas_wall_temp) * (adiabatic_wall_temp - gas_wall_temp)
 
     def heat_flow(gas_wall_temp):
         return gas_transfer_coefficient(gas_wall_temp) * station_length * 2 * math.pi * radius * (adiabatic_wall_temp - gas_wall_temp)
@@ -167,15 +167,18 @@ def test(station, data):
         try:
             return fuel_temperature - coolant_temp(gas_wall_temp)
         except BoundsError:
-            return 1000000000
+            return 100 * gas_wall_temp
 
     # Initial guesses for gas wall temp, well below actual
     gas_wall_temp_guess = data[station - 1][1] if station != 0 else guess_for_exit_wall_temp
 
+    plt.scatter([temp + 270 for temp in range(800)], [funct2solve(temp + 270) for temp in range(800)])
+    plt.show()
+
     gas_wall_temp, _, flag, message = fsolve(funct2solve, gas_wall_temp_guess, full_output=True)
 
     if flag != 1:
-        raise Exception("Equilibrium not found for station " + str(station) + ", solver error: " + message)
+        raise Exception("Equilibrium not found for station " + str(station) + ", solver error: " + message + str(funct2solve(gas_wall_temp)))
 
     # Storing Calculated Values
     data[station][1] = gas_wall_temp
