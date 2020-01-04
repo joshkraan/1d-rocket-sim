@@ -22,34 +22,38 @@ from input_processing import (
 )
 
 
+class BoundsError(Exception):
+    pass
+
+
 # Polynomial fits for kerosene properties at 1.7Mpa for temperatures between 270K and 650K.
 def density(temperature):
-    #if temperature < 270 or temperature > 650:
-    #      raise Exception("Temperature out of range for density: " + str(temperature))
+    if temperature < 270 or temperature > 650:
+        raise BoundsError("Temperature out of range for density: " + str(temperature))
     return -7.35246E-13 * temperature ** 6 + 1.89632E-09 * temperature ** 5 - 2.01450E-06 * temperature ** 4 + 1.12544E-03 * temperature ** 3 - 3.48382E-01 * temperature ** 2 + 5.59004E+01 * temperature - 2.75598E+03
 
 
 def specific_heat(temperature):
-    #if temperature < 270 or temperature > 650:
-    #   raise Exception("Temperature out of range for specific heat: " + str(temperature))
+    if temperature < 270 or temperature > 650:
+        raise BoundsError("Temperature out of range for specific heat: " + str(temperature))
     return 1.40053E-11 * temperature ** 6 - 3.66091E-08 * temperature ** 5 + 3.93278E-05 * temperature ** 4 - 2.22085E-02 * temperature ** 3 + 6.94910E+00 * temperature ** 2 - 1.13776E+03 * temperature + 7.76898E+04
 
 
 def viscosity(temperature):
-    #if temperature < 270 or temperature > 650:
-    #   raise Exception("Temperature out of range for viscosity: " + str(temperature))
+    if temperature < 270 or temperature > 650:
+        raise BoundsError("Temperature out of range for viscosity: " + str(temperature))
     return 2.39318E-17 * temperature ** 6 - 7.07636E-14 * temperature ** 5 + 8.64557E-11 * temperature ** 4 - 5.58968E-08 * temperature ** 3 + 2.01936E-05 * temperature ** 2 - 3.87381E-03 * temperature + 3.09736E-01
 
 
 def thermal_conductivity(temperature):
-    #if temperature < 270 or temperature > 650:
-    #   raise Exception("Temperature out of range for thermal conductivity: " + str(temperature))
+    if temperature < 270 or temperature > 650:
+        raise BoundsError("Temperature out of range for thermal conductivity: " + str(temperature))
     return 6.27385E-17 * temperature ** 6 - 1.63841E-13 * temperature ** 5 + 1.76034E-10 * temperature ** 4 - 9.95363E-08 * temperature ** 3 + 3.13833E-05 * temperature ** 2 - 5.41772E-03 * temperature + 5.25984E-01
 
 
 def kerosene_temperature(enthalpy):
-    #if enthalpy < -466070 or enthalpy > 547770:
-    #    raise Exception("Enthalpy out of range for temperature: " + str(enthalpy))
+    if enthalpy < -466070 or enthalpy > 547770:
+        raise BoundsError("Enthalpy out of range for temperature: " + str(enthalpy))
     return -1.10030E-34 * enthalpy ** 6 + 1.57293E-29 * enthalpy ** 5 - 3.53013E-23 * enthalpy ** 4 + 6.01412E-17 * enthalpy ** 3 - 1.08504E-10 * enthalpy ** 2 + 3.70175E-04 * enthalpy + 4.75311E+02
 
 
@@ -160,12 +164,18 @@ def test(station, data):
         return coolant_wall_temp(gas_wall_temp) - heat_flow(gas_wall_temp) * convection_resistance(gas_wall_temp)
 
     def funct2solve(gas_wall_temp):
-        return fuel_temperature - coolant_temp(x)
+        try:
+            return fuel_temperature - coolant_temp(gas_wall_temp)
+        except BoundsError:
+            return 1000000000
 
     # Initial guesses for gas wall temp, well below actual
     gas_wall_temp_guess = data[station - 1][1] if station != 0 else guess_for_exit_wall_temp
 
-    gas_wall_temp = fsolve(funct2solve, gas_wall_temp_guess)
+    gas_wall_temp, _, flag, message = fsolve(funct2solve, gas_wall_temp_guess, full_output=True)
+
+    if flag != 1:
+        raise Exception("Equilibrium not found for station " + str(station) + ", solver error: " + message)
 
     # Storing Calculated Values
     data[station][1] = gas_wall_temp
