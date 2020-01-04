@@ -19,24 +19,35 @@ from input_processing import (
 )
 
 
+# Polynomial fits for kerosene properties at 1.7Mpa for temperatures between 270K and 650K.
 def density(temperature):
-    return -7.35246E-13*temperature**6 + 1.89632E-09*temperature**5 - 2.01450E-06*temperature**4 + 1.12544E-03*temperature**3 - 3.48382E-01*temperature**2 + 5.59004E+01*temperature - 2.75598E+03
+    if temperature < 270 or temperature > 650:
+        raise Exception("Temperature out of range for density: " + str(temperature))
+    return -7.35246E-13 * temperature ** 6 + 1.89632E-09 * temperature ** 5 - 2.01450E-06 * temperature ** 4 + 1.12544E-03 * temperature ** 3 - 3.48382E-01 * temperature ** 2 + 5.59004E+01 * temperature - 2.75598E+03
 
 
 def specific_heat(temperature):
-    return 1.40053E-11*temperature**6 - 3.66091E-08*temperature**5 + 3.93278E-05*temperature**4 - 2.22085E-02*temperature**3 + 6.94910E+00*temperature**2 - 1.13776E+03*temperature + 7.76898E+04
+    if temperature < 270 or temperature > 650:
+        raise Exception("Temperature out of range for specific heat: " + str(temperature))
+    return 1.40053E-11 * temperature ** 6 - 3.66091E-08 * temperature ** 5 + 3.93278E-05 * temperature ** 4 - 2.22085E-02 * temperature ** 3 + 6.94910E+00 * temperature ** 2 - 1.13776E+03 * temperature + 7.76898E+04
 
 
 def viscosity(temperature):
-    return 2.39318E-17*temperature**6 - 7.07636E-14*temperature**5 + 8.64557E-11*temperature**4 - 5.58968E-08*temperature**3 + 2.01936E-05*temperature**2 - 3.87381E-03*temperature + 3.09736E-01
+    if temperature < 270 or temperature > 650:
+        raise Exception("Temperature out of range for viscosity: " + str(temperature))
+    return 2.39318E-17 * temperature ** 6 - 7.07636E-14 * temperature ** 5 + 8.64557E-11 * temperature ** 4 - 5.58968E-08 * temperature ** 3 + 2.01936E-05 * temperature ** 2 - 3.87381E-03 * temperature + 3.09736E-01
 
 
 def thermal_conductivity(temperature):
-    return 6.27385E-17*temperature**6 - 1.63841E-13*temperature**5 + 1.76034E-10*temperature**4 - 9.95363E-08*temperature**3 + 3.13833E-05*temperature**2 - 5.41772E-03*temperature + 5.25984E-01
+    if temperature < 270 or temperature > 650:
+        raise Exception("Temperature out of range for thermal conductivity: " + str(temperature))
+    return 6.27385E-17 * temperature ** 6 - 1.63841E-13 * temperature ** 5 + 1.76034E-10 * temperature ** 4 - 9.95363E-08 * temperature ** 3 + 3.13833E-05 * temperature ** 2 - 5.41772E-03 * temperature + 5.25984E-01
 
 
 def kerosene_temperature(enthalpy):
-    return -1.10030E-34*enthalpy**6 + 1.57293E-29*enthalpy**5 - 3.53013E-23*enthalpy**4 + 6.01412E-17*enthalpy**3 - 1.08504E-10*enthalpy**2 + 3.70175E-04*enthalpy + 4.75311E+02
+    if enthalpy < -466070 or enthalpy > 547770:
+        raise Exception("Enthalpy out of range for temperature: " + str(enthalpy))
+    return -1.10030E-34 * enthalpy ** 6 + 1.57293E-29 * enthalpy ** 5 - 3.53013E-23 * enthalpy ** 4 + 6.01412E-17 * enthalpy ** 3 - 1.08504E-10 * enthalpy ** 2 + 3.70175E-04 * enthalpy + 4.75311E+02
 
 
 def inner_radius(x):
@@ -69,56 +80,57 @@ def test(station, data):
     # Calculate the area ratio
     local_area = math.pi * radius ** 2
     throat_area = math.pi * throat_radius ** 2
-    area_ratio1 = local_area / throat_area
+    area_ratio = local_area / throat_area
 
     # Calculate the mach number
     # Solved iteratively
 
-    mach_number1 = 0
+    mach_number = 0
     if x < throat_position:
         mach_current = 0.3
         mach_last = 0
         while abs(mach_current - mach_last) > 0.00001:
             mach_last = mach_current
-            mach_current = 1 / area_ratio1 * ((2 + (gas_gamma - 1) * mach_last ** 2) / (gas_gamma + 1)) ** (
+            mach_current = 1 / area_ratio * ((2 + (gas_gamma - 1) * mach_last ** 2) / (gas_gamma + 1)) ** (
                     (gas_gamma + 1) / (2 * (gas_gamma - 1)))
-        mach_number1 = mach_current
+        mach_number = mach_current
     elif x == throat_position:
-        mach_number1 = 1
+        mach_number = 1
     elif x > throat_position:
         mach_current = 1.2
         mach_last = 0
         while abs(mach_current - mach_last) > 0.00001:
             mach_last = mach_current
             mach_current = math.sqrt(
-                ((gas_gamma + 1) * (area_ratio1 * mach_last) ** ((2 * (gas_gamma - 1)) / (gas_gamma + 1)) - 2) / (gas_gamma - 1))
-        mach_number1 = mach_current
+                ((gas_gamma + 1) * (area_ratio * mach_last) ** ((2 * (gas_gamma - 1)) / (gas_gamma + 1)) - 2) / (
+                        gas_gamma - 1))
+        mach_number = mach_current
 
     # Calculate the adiabatic wall temperature
     recovery_factor = gas_prandtl_number ** 0.33
-    a = 1 + recovery_factor * (gas_gamma - 1) / 2 * mach_number1 ** 2
-    b = 1 + (gas_gamma - 1) / 2 * mach_number1 ** 2
-    adiabatic_wall_temp1 = chamber_temperature * (a / b)
+    a = 1 + recovery_factor * (gas_gamma - 1) / 2 * mach_number ** 2
+    b = 1 + (gas_gamma - 1) / 2 * mach_number ** 2
+    adiabatic_wall_temp = chamber_temperature * (a / b)
 
     # Calculate the gas transfer coefficient
-    def gas_transfer_coefficient1(gas_wall_temp1):
-        g = 1 + (gas_gamma - 1) / 2 * mach_number1 ** 2
+    def gas_transfer_coefficient(gas_wall_temp1):
+        g = 1 + (gas_gamma - 1) / 2 * mach_number ** 2
         sigma = 1 / ((0.5 * (gas_wall_temp1 / chamber_temperature) * g + 0.5) ** 0.68 * g ** 0.12)
 
-        return 0.026 / (throat_radius * 2) ** 0.2 * gas_viscosity ** 0.2 * gas_specific_heat / gas_prandtl_number ** 0.6 * \
-               (chamber_pressure / characteristic_velocity) ** 0.8 * (throat_radius * 2 / throat_bevel_radius) ** 0.1 *\
-               (1 / area_ratio1) ** 0.9 * sigma
+        return 0.026 / (
+                throat_radius * 2) ** 0.2 * gas_viscosity ** 0.2 * gas_specific_heat / gas_prandtl_number ** 0.6 * \
+               (chamber_pressure / characteristic_velocity) ** 0.8 * (throat_radius * 2 / throat_bevel_radius) ** 0.1 * \
+               (1 / area_ratio) ** 0.9 * sigma
 
     fuel_temperature = kerosene_temperature(data[station][3])
     data[station][0] = fuel_temperature
 
     # Calculate the coolant transfer coefficient
-    def coolant_transfer_coefficient1(wall_temp):
-        hydraulic_diameter = 2 * channel_height  # TODO CHECK THAT THIS IS TRUE (annulus)
+    def coolant_transfer_coefficient(wall_temp):
+        hydraulic_diameter = 2 * channel_height
         coolant_wall_viscosity = viscosity(wall_temp)
-        if coolant_wall_viscosity < 0:
-            raise Exception('Try adjusting your guesses, out of range of fitted data')
-        velocity = coolant_flow_rate / ((math.pi * (radius + inner_wall_thickness + channel_height) ** 2 - math.pi * (radius + inner_wall_thickness) ** 2) * density(fuel_temperature))
+        velocity = coolant_flow_rate / ((math.pi * (radius + inner_wall_thickness + channel_height) ** 2 - math.pi * (
+                radius + inner_wall_thickness) ** 2) * density(fuel_temperature))
         re = density(fuel_temperature) * velocity * hydraulic_diameter / viscosity(fuel_temperature)
         pr = viscosity(fuel_temperature) * specific_heat(fuel_temperature) / thermal_conductivity(fuel_temperature)
         nu = 0.027 * re ** 0.8 * pr ** (1 / 3) * (viscosity(fuel_temperature) / coolant_wall_viscosity) ** 0.14
@@ -126,20 +138,31 @@ def test(station, data):
 
     # Calculate the heat balance
 
-    # Initial guesses for gas wall temp, q and coolant temp, well below actual
-    gas_wall_temp = data[station-1][1] if station != 0 else guess_for_exit_wall_temp
-    coolant_temp = data[station-1][0] if station != 0 else fuel_input_temperature
-    q = data[station - 1][2] if station != 0 else guess_for_exit_heat_flux
+    # Initial guesses for gas wall temp, well below actual
+    gas_wall_temp = data[station - 1][1] if station != 0 else guess_for_exit_wall_temp
+
+    # Initialize coolant_temp and q so they can be accessed later
+    coolant_temp, q = 0, 0
 
     # Set step size for iteration
     step_size = 100
 
     # Iteratively solves for fuel temp
     while abs(fuel_temperature - coolant_temp) > 0.00001:
-        q = gas_transfer_coefficient1(gas_wall_temp) * station_length * 2 * math.pi * radius * (adiabatic_wall_temp1 - gas_wall_temp)
+        q = gas_transfer_coefficient(gas_wall_temp) * station_length * 2 * math.pi * radius * (adiabatic_wall_temp - gas_wall_temp)
         conduction_resistance = math.log((radius + inner_wall_thickness) / radius) / (2 * math.pi * station_length * wall_thermal_conductivity)
         coolant_wall_temp = gas_wall_temp - q * conduction_resistance
-        convection_resistance = 1 / (coolant_transfer_coefficient1(coolant_wall_temp) * 2 * math.pi * station_length * (radius + inner_wall_thickness))
+
+        # TODO: I feel like we can solve this issue with some simple if statements depending on coolant_wall_temp, as it can't go over 650
+
+        # if coolant_wall_temp > 650:
+        #     convection_resistance = 1 / (coolant_transfer_coefficient(650) * 2 * math.pi * station_length * (radius + inner_wall_thickness))
+        #     coolant_temp = 650 - q * convection_resistance
+        #
+        #     if coolant_temp < fuel_temperature:
+        #         raise Exception("Fuel is boiling!")
+
+        convection_resistance = 1 / (coolant_transfer_coefficient(coolant_wall_temp) * 2 * math.pi * station_length * (radius + inner_wall_thickness))
         coolant_temp = coolant_wall_temp - q * convection_resistance
         if coolant_temp > fuel_temperature:
             gas_wall_temp -= step_size
@@ -150,13 +173,13 @@ def test(station, data):
     # Storing Calculated Values
     data[station][1] = gas_wall_temp
     data[station][2] = q
-    data[station][4] = gas_transfer_coefficient1(gas_wall_temp) * (adiabatic_wall_temp1 - gas_wall_temp)
+    data[station][4] = gas_transfer_coefficient(gas_wall_temp) * (adiabatic_wall_temp - gas_wall_temp)
     # Enthalpy of station + 1 is current station enthalpy plus change in enthalpy
     data[station + 1][3] = data[station][3] + q / coolant_flow_rate
 
 
-# Actual Code
-calc_data = [[0 for x in range(8)] for y in range(num_stations+1)]
+# Driving Code
+calc_data = [[0 for x in range(8)] for y in range(num_stations + 1)]
 calc_data[0][0] = fuel_input_temperature
 calc_data[0][3] = fuel_input_enthalpy
 
@@ -171,10 +194,12 @@ for i in range(num_stations):
 
 fig = plt.figure()
 ax1 = fig.add_subplot(211)
-ax1 = plt.scatter([bounds[4]-station_length*station for station in range(num_stations+1)], [row[4] for row in calc_data])
+ax1 = plt.scatter([bounds[4] - station_length * station for station in range(num_stations + 1)],
+                  [row[4] for row in calc_data])
 
 ax2 = fig.add_subplot(212)
-ax2 = plt.scatter([bounds[4]-station_length*station for station in range(num_stations+1)], [row[1] for row in calc_data])
+ax2 = plt.scatter([bounds[4] - station_length * station for station in range(num_stations + 1)],
+                  [row[1] for row in calc_data])
 
 plt.show()
 
