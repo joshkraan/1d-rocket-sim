@@ -41,6 +41,6 @@ prandtl_number = 0.4364  # unitless
 """
 Miscellaneous inputs
 """
-fuel_flow_rate = 100  # kg/s
+fuel_flow_rate = 2.56  # kg/s
 ox_flow_rate = 5.65  # kg/s
 input_enthalpy = -408900 #J/s

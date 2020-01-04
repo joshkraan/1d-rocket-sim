@@ -24,32 +24,32 @@ from input_processing import (
 
 # Polynomial fits for kerosene properties at 1.7Mpa for temperatures between 270K and 650K.
 def density(temperature):
-   #  if temperature < 270 or temperature > 650:
-     #   raise Exception("Temperature out of range for density: " + str(temperature))
+    #if temperature < 270 or temperature > 650:
+    #      raise Exception("Temperature out of range for density: " + str(temperature))
     return -7.35246E-13 * temperature ** 6 + 1.89632E-09 * temperature ** 5 - 2.01450E-06 * temperature ** 4 + 1.12544E-03 * temperature ** 3 - 3.48382E-01 * temperature ** 2 + 5.59004E+01 * temperature - 2.75598E+03
 
 
 def specific_heat(temperature):
     #if temperature < 270 or temperature > 650:
-    #    raise Exception("Temperature out of range for specific heat: " + str(temperature))
+    #   raise Exception("Temperature out of range for specific heat: " + str(temperature))
     return 1.40053E-11 * temperature ** 6 - 3.66091E-08 * temperature ** 5 + 3.93278E-05 * temperature ** 4 - 2.22085E-02 * temperature ** 3 + 6.94910E+00 * temperature ** 2 - 1.13776E+03 * temperature + 7.76898E+04
 
 
 def viscosity(temperature):
     #if temperature < 270 or temperature > 650:
-     #   raise Exception("Temperature out of range for viscosity: " + str(temperature))
+    #   raise Exception("Temperature out of range for viscosity: " + str(temperature))
     return 2.39318E-17 * temperature ** 6 - 7.07636E-14 * temperature ** 5 + 8.64557E-11 * temperature ** 4 - 5.58968E-08 * temperature ** 3 + 2.01936E-05 * temperature ** 2 - 3.87381E-03 * temperature + 3.09736E-01
 
 
 def thermal_conductivity(temperature):
     #if temperature < 270 or temperature > 650:
-     #   raise Exception("Temperature out of range for thermal conductivity: " + str(temperature))
+    #   raise Exception("Temperature out of range for thermal conductivity: " + str(temperature))
     return 6.27385E-17 * temperature ** 6 - 1.63841E-13 * temperature ** 5 + 1.76034E-10 * temperature ** 4 - 9.95363E-08 * temperature ** 3 + 3.13833E-05 * temperature ** 2 - 5.41772E-03 * temperature + 5.25984E-01
 
 
 def kerosene_temperature(enthalpy):
-    if enthalpy < -466070 or enthalpy > 547770:
-        raise Exception("Enthalpy out of range for temperature: " + str(enthalpy))
+    #if enthalpy < -466070 or enthalpy > 547770:
+    #    raise Exception("Enthalpy out of range for temperature: " + str(enthalpy))
     return -1.10030E-34 * enthalpy ** 6 + 1.57293E-29 * enthalpy ** 5 - 3.53013E-23 * enthalpy ** 4 + 6.01412E-17 * enthalpy ** 3 - 1.08504E-10 * enthalpy ** 2 + 3.70175E-04 * enthalpy + 4.75311E+02
 
 
@@ -141,7 +141,10 @@ def test(station, data):
 
     # Calculate the heat balance
 
-    conduction_resistance = math.log((radius + inner_wall_thickness) / radius) / ( 2 * math.pi * station_length * wall_thermal_conductivity)
+    conduction_resistance = math.log((radius + inner_wall_thickness) / radius) / (2 * math.pi * station_length * wall_thermal_conductivity)
+
+    def heat_flux(gas_wall_temp):
+        return gas_transfer_coefficient(gas_wall_temp)* (adiabatic_wall_temp - gas_wall_temp)
 
     def heat_flow(gas_wall_temp):
         return gas_transfer_coefficient(gas_wall_temp) * station_length * 2 * math.pi * radius * (adiabatic_wall_temp - gas_wall_temp)
@@ -166,7 +169,7 @@ def test(station, data):
 
     # Storing Calculated Values
     data[station][1] = gas_wall_temp
-    data[station][2] = heat_flow(gas_wall_temp)
+    data[station][2] = heat_flux(gas_wall_temp)
     data[station][4] = gas_transfer_coefficient(gas_wall_temp) * (adiabatic_wall_temp - gas_wall_temp)
     data[station][5] = coolant_wall_temp(gas_wall_temp)
     # Enthalpy of station + 1 is current station enthalpy plus change in enthalpy
@@ -190,13 +193,13 @@ for i in range(num_stations):
 fig = plt.figure()
 ax1 = fig.add_subplot(211)
 ax1 = plt.scatter([bounds[4] - station_length * station for station in range(num_stations + 1)],
-                  [row[0] for row in calc_data])
+                  [row[2] for row in calc_data])
 axes = plt.gca()
 
 
 ax2 = fig.add_subplot(212)
 ax2 = plt.scatter([bounds[4] - station_length * station for station in range(num_stations + 1)],
-                  [row[3] for row in calc_data])
+                  [row[1] for row in calc_data])
 axes = plt.gca()
 
 
