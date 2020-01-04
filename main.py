@@ -1,5 +1,8 @@
 import math
 import matplotlib.pyplot as plt
+import numpy as np
+from scipy.optimize import fsolve
+
 
 from input_processing import (
     # Chamber dimensions
@@ -21,26 +24,26 @@ from input_processing import (
 
 # Polynomial fits for kerosene properties at 1.7Mpa for temperatures between 270K and 650K.
 def density(temperature):
-    if temperature < 270 or temperature > 650:
-        raise Exception("Temperature out of range for density: " + str(temperature))
+   #  if temperature < 270 or temperature > 650:
+     #   raise Exception("Temperature out of range for density: " + str(temperature))
     return -7.35246E-13 * temperature ** 6 + 1.89632E-09 * temperature ** 5 - 2.01450E-06 * temperature ** 4 + 1.12544E-03 * temperature ** 3 - 3.48382E-01 * temperature ** 2 + 5.59004E+01 * temperature - 2.75598E+03
 
 
 def specific_heat(temperature):
-    if temperature < 270 or temperature > 650:
-        raise Exception("Temperature out of range for specific heat: " + str(temperature))
+    #if temperature < 270 or temperature > 650:
+    #    raise Exception("Temperature out of range for specific heat: " + str(temperature))
     return 1.40053E-11 * temperature ** 6 - 3.66091E-08 * temperature ** 5 + 3.93278E-05 * temperature ** 4 - 2.22085E-02 * temperature ** 3 + 6.94910E+00 * temperature ** 2 - 1.13776E+03 * temperature + 7.76898E+04
 
 
 def viscosity(temperature):
-    if temperature < 270 or temperature > 650:
-        raise Exception("Temperature out of range for viscosity: " + str(temperature))
+    #if temperature < 270 or temperature > 650:
+     #   raise Exception("Temperature out of range for viscosity: " + str(temperature))
     return 2.39318E-17 * temperature ** 6 - 7.07636E-14 * temperature ** 5 + 8.64557E-11 * temperature ** 4 - 5.58968E-08 * temperature ** 3 + 2.01936E-05 * temperature ** 2 - 3.87381E-03 * temperature + 3.09736E-01
 
 
 def thermal_conductivity(temperature):
-    if temperature < 270 or temperature > 650:
-        raise Exception("Temperature out of range for thermal conductivity: " + str(temperature))
+    #if temperature < 270 or temperature > 650:
+     #   raise Exception("Temperature out of range for thermal conductivity: " + str(temperature))
     return 6.27385E-17 * temperature ** 6 - 1.63841E-13 * temperature ** 5 + 1.76034E-10 * temperature ** 4 - 9.95363E-08 * temperature ** 3 + 3.13833E-05 * temperature ** 2 - 5.41772E-03 * temperature + 5.25984E-01
 
 
@@ -138,44 +141,36 @@ def test(station, data):
 
     # Calculate the heat balance
 
+    conduction_resistance = math.log((radius + inner_wall_thickness) / radius) / ( 2 * math.pi * station_length * wall_thermal_conductivity)
+
+    def heat_flow(gas_wall_temp):
+        return gas_transfer_coefficient(gas_wall_temp) * station_length * 2 * math.pi * radius * (adiabatic_wall_temp - gas_wall_temp)
+
+    def coolant_wall_temp(gas_wall_temp):
+        return gas_wall_temp - heat_flow(gas_wall_temp) * conduction_resistance
+
+    def convection_resistance(gas_wall_temp):
+        return 1 / (coolant_transfer_coefficient(coolant_wall_temp(gas_wall_temp)) * 2 * math.pi * station_length * (
+                    radius + inner_wall_thickness))
+
+    def coolant_temp(gas_wall_temp):
+        return coolant_wall_temp(gas_wall_temp) - heat_flow(gas_wall_temp) * convection_resistance(gas_wall_temp)
+
+    def funct2solve(gas_wall_temp):
+        return fuel_temperature - coolant_temp(x)
+
     # Initial guesses for gas wall temp, well below actual
-    gas_wall_temp = data[station - 1][1] if station != 0 else guess_for_exit_wall_temp
+    gas_wall_temp_guess = data[station - 1][1] if station != 0 else guess_for_exit_wall_temp
 
-    # Initialize coolant_temp and q so they can be accessed later
-    coolant_temp, q = 0, 0
-
-    # Set step size for iteration
-    step_size = 100
-
-    # Iteratively solves for fuel temp
-    while abs(fuel_temperature - coolant_temp) > 0.00001:
-        q = gas_transfer_coefficient(gas_wall_temp) * station_length * 2 * math.pi * radius * (adiabatic_wall_temp - gas_wall_temp)
-        conduction_resistance = math.log((radius + inner_wall_thickness) / radius) / (2 * math.pi * station_length * wall_thermal_conductivity)
-        coolant_wall_temp = gas_wall_temp - q * conduction_resistance
-
-        # TODO: I feel like we can solve this issue with some simple if statements depending on coolant_wall_temp, as it can't go over 650
-
-        # if coolant_wall_temp > 650:
-        #     convection_resistance = 1 / (coolant_transfer_coefficient(650) * 2 * math.pi * station_length * (radius + inner_wall_thickness))
-        #     coolant_temp = 650 - q * convection_resistance
-        #
-        #     if coolant_temp < fuel_temperature:
-        #         raise Exception("Fuel is boiling!")
-
-        convection_resistance = 1 / (coolant_transfer_coefficient(coolant_wall_temp) * 2 * math.pi * station_length * (radius + inner_wall_thickness))
-        coolant_temp = coolant_wall_temp - q * convection_resistance
-        if coolant_temp > fuel_temperature:
-            gas_wall_temp -= step_size
-            step_size /= 10
-        else:
-            gas_wall_temp += step_size
+    gas_wall_temp = fsolve(funct2solve, gas_wall_temp_guess)
 
     # Storing Calculated Values
     data[station][1] = gas_wall_temp
-    data[station][2] = q
+    data[station][2] = heat_flow(gas_wall_temp)
     data[station][4] = gas_transfer_coefficient(gas_wall_temp) * (adiabatic_wall_temp - gas_wall_temp)
+    data[station][5] = coolant_wall_temp(gas_wall_temp)
     # Enthalpy of station + 1 is current station enthalpy plus change in enthalpy
-    data[station + 1][3] = data[station][3] + q / coolant_flow_rate
+    data[station + 1][3] = data[station][3] + heat_flow(gas_wall_temp) / coolant_flow_rate
 
 
 # Driving Code
@@ -195,11 +190,15 @@ for i in range(num_stations):
 fig = plt.figure()
 ax1 = fig.add_subplot(211)
 ax1 = plt.scatter([bounds[4] - station_length * station for station in range(num_stations + 1)],
-                  [row[4] for row in calc_data])
+                  [row[0] for row in calc_data])
+axes = plt.gca()
+
 
 ax2 = fig.add_subplot(212)
 ax2 = plt.scatter([bounds[4] - station_length * station for station in range(num_stations + 1)],
-                  [row[1] for row in calc_data])
+                  [row[3] for row in calc_data])
+axes = plt.gca()
+
 
 plt.show()
 
