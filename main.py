@@ -28,24 +28,28 @@ class BoundsError(Exception):
 
 # Polynomial fits for kerosene properties at 1.7Mpa for temperatures between 270K and 650K.
 def density(temperature):
+    return 800
     if temperature < 270 or temperature > 650:
         raise BoundsError("Temperature out of range for density: " + str(temperature))
     return -7.35246E-13 * temperature ** 6 + 1.89632E-09 * temperature ** 5 - 2.01450E-06 * temperature ** 4 + 1.12544E-03 * temperature ** 3 - 3.48382E-01 * temperature ** 2 + 5.59004E+01 * temperature - 2.75598E+03
 
 
 def specific_heat(temperature):
+    return 2500
     if temperature < 270 or temperature > 650:
         raise BoundsError("Temperature out of range for specific heat: " + str(temperature))
     return 1.40053E-11 * temperature ** 6 - 3.66091E-08 * temperature ** 5 + 3.93278E-05 * temperature ** 4 - 2.22085E-02 * temperature ** 3 + 6.94910E+00 * temperature ** 2 - 1.13776E+03 * temperature + 7.76898E+04
 
 
 def viscosity(temperature):
+    return 0.003
     if temperature < 270 or temperature > 650:
         raise BoundsError("Temperature out of range for viscosity: " + str(temperature))
     return 2.39318E-17 * temperature ** 6 - 7.07636E-14 * temperature ** 5 + 8.64557E-11 * temperature ** 4 - 5.58968E-08 * temperature ** 3 + 2.01936E-05 * temperature ** 2 - 3.87381E-03 * temperature + 3.09736E-01
 
 
 def thermal_conductivity(temperature):
+    return 0.1
     if temperature < 270 or temperature > 650:
         raise BoundsError("Temperature out of range for thermal conductivity: " + str(temperature))
     return 6.27385E-17 * temperature ** 6 - 1.63841E-13 * temperature ** 5 + 1.76034E-10 * temperature ** 4 - 9.95363E-08 * temperature ** 3 + 3.13833E-05 * temperature ** 2 - 5.41772E-03 * temperature + 5.25984E-01
@@ -151,7 +155,7 @@ def test(station, data):
         return gas_transfer_coefficient(gas_wall_temp) * (adiabatic_wall_temp - gas_wall_temp)
 
     def heat_flow(gas_wall_temp):
-        return gas_transfer_coefficient(gas_wall_temp) * station_length * 2 * math.pi * radius * (adiabatic_wall_temp - gas_wall_temp)
+        return gas_transfer_coefficient(gas_wall_temp) * (station_length * 2 * math.pi * radius) * (adiabatic_wall_temp - gas_wall_temp) # h_g * A * (Taw- Twg)
 
     def coolant_wall_temp(gas_wall_temp):
         return gas_wall_temp - heat_flow(gas_wall_temp) * conduction_resistance
@@ -165,15 +169,15 @@ def test(station, data):
 
     def funct2solve(gas_wall_temp):
         try:
-            return fuel_temperature - coolant_temp(gas_wall_temp)
+            return heat_flow(gas_wall_temp) * conduction_resistance # fuel_temperature - coolant_temp(gas_wall_temp)
         except BoundsError:
-            return 100 * gas_wall_temp
+            return 0
 
     # Initial guesses for gas wall temp, well below actual
     gas_wall_temp_guess = data[station - 1][1] if station != 0 else guess_for_exit_wall_temp
-
-    plt.scatter([temp + 270 for temp in range(800)], [funct2solve(temp + 270) for temp in range(800)])
-    plt.show()
+    print(conduction_resistance)
+    # plt.scatter([temp+250 for temp in range(1200)], [funct2solve(temp+250) for temp in range(1200)])
+    # plt.show()
 
     gas_wall_temp, _, flag, message = fsolve(funct2solve, gas_wall_temp_guess, full_output=True)
 
