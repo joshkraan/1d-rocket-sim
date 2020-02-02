@@ -30,11 +30,11 @@ fuel_input_temperature = 300  # k
 CEARUN Results
 """
 chamber_pressure = 16.5  # Bar
-chamber_temperature = 3111.90  # kelvin
-gamma = 1.123  # unitless
-viscosity = 0.97784  # millipoise
-specific_heat = 9.1653 # kJ / (kg K)
-prandtl_number = 0.4133  # unitless
+chamber_temperature = 3007.94  # kelvin
+gamma = 1.1873  # unitless
+viscosity = 0.91273  # millipoise
+specific_heat = 3.3324  # kJ / (kg K)
+prandtl_number = 0.3804  # unitless
 
 """
 Miscellaneous inputs
