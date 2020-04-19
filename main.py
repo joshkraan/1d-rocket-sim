@@ -28,7 +28,6 @@ class BoundsError(Exception):
 
 # Polynomial fits for kerosene properties at 1.7Mpa for temperatures between 270K and 650K.
 def density(temperature):
-    return 800
     if temperature < 270 or temperature > 650:
         raise BoundsError("Temperature out of range for density: " + str(temperature))
     return -7.35246E-13 * temperature ** 6 + 1.89632E-09 * temperature ** 5 - 2.01450E-06 * temperature ** 4 + 1.12544E-03 * temperature ** 3 - 3.48382E-01 * temperature ** 2 + 5.59004E+01 * temperature - 2.75598E+03
@@ -67,7 +66,7 @@ def inner_radius(x):
         return chamber_radius
     elif bounds[0] < x <= bounds[1]:
         return math.sqrt(
-            throat_bevel_radius ** 2 - (x - chamber_length) ** 2) + chamber_radius - chamber_bevel_radius
+            chamber_bevel_radius ** 2 - (x - chamber_length) ** 2) + chamber_radius - chamber_bevel_radius
     elif bounds[1] < x <= bounds[2]:
         return - math.tan(converging_half_angle) * (x - chamber_length - chamber_bevel_radius * math.sin(
             converging_half_angle)) + chamber_radius + chamber_bevel_radius * math.cos(
@@ -211,22 +210,30 @@ calc_data[0][3] = fuel_input_enthalpy
 # Column 2 is Heat Transfer (W)
 # Column 3 is Enthalpy (J/Kg)
 
-for i in range(num_stations):
-    test(i, calc_data)
+# for i in range(num_stations):
+#     test(i, calc_data)
+#
+# fig = plt.figure()
+# ax1 = fig.add_subplot(211)
+# ax1 = plt.scatter([bounds[4] - station_length * station for station in range(num_stations + 1)],
+#                   [row[2] for row in calc_data])
+# axes = plt.gca()
+#
+#
+# ax2 = fig.add_subplot(212)
+# ax2 = plt.scatter([bounds[4] - station_length * station for station in range(num_stations + 1)],
+#                   [row[1] for row in calc_data])
+# axes = plt.gca()
+#
+#
+# plt.show()
 
-fig = plt.figure()
-ax1 = fig.add_subplot(211)
-ax1 = plt.scatter([bounds[4] - station_length * station for station in range(num_stations + 1)],
-                  [row[2] for row in calc_data])
-axes = plt.gca()
+# print(bounds[0], bounds[1], bounds[2], bounds[3], bounds[4])
 
+pos = np.linspace(0, 0.5, 500)
+radius = np.vectorize(inner_radius)(pos)
 
-ax2 = fig.add_subplot(212)
-ax2 = plt.scatter([bounds[4] - station_length * station for station in range(num_stations + 1)],
-                  [row[1] for row in calc_data])
-axes = plt.gca()
-
-
+plt.scatter(pos, radius)
 plt.show()
 
 # TODO gas wall temp is fucked => anything else could be
