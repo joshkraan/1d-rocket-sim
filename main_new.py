@@ -1,6 +1,7 @@
 import inputs_new as inp
 import numpy as np
 import scipy.optimize
+from scipy.interpolate import interp1d
 import seaborn as sns
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -31,23 +32,13 @@ throat_position = inp.chamber_length + inp.chamber_bevel_radius * math.sin(conv_
 
 station_width = diverging_end / inp.num_stations
 
-
-class BoundsError(Exception):
-    pass
-
-
-def props(property_name, temp):
-    coeffs = {'dens': inp.density_coefficients, 'cp': inp.density_coefficients,
-              'visc': inp.viscosity_coefficients, 'cond': inp.thermal_conductivity_coefficients}
-    if temp < inp.temp_lower_bound or temp > inp.temp_upper_bound:
-        raise BoundsError("Temperature out of range for " + property_name + ": " + str(temp))
-    return np.poly1d(coeffs[property_name])(temp)
-
-
-def fuel_temperature(enthalpy):
-    if np.any(enthalpy < inp.enthalpy_lower_bound) or np.any(enthalpy > inp.enthalpy_upper_bound):
-        raise BoundsError("Enthalpy out of range for temperature: " + str(enthalpy))
-    return np.poly1d(inp.temperature_coefficients)(enthalpy)
+data = pd.read_csv(inp.fuel_properties_file)
+fuel_density = interp1d(data["Temperature"], data["Density"], kind='cubic', bounds_error=True)
+fuel_specific_heat = interp1d(data["Temperature"], data["Specific Heat"], kind='cubic', bounds_error=True)
+fuel_conductivity = interp1d(data["Temperature"], data["Thermal Conductivity"], kind='cubic', bounds_error=True)
+fuel_viscosity = interp1d(data["Temperature"], data["Viscosity"], kind='cubic', bounds_error=True)
+fuel_enthalpy = interp1d(data["Temperature"], data["Enthalpy"], kind='cubic', bounds_error=True)
+fuel_temperature = interp1d(data["Enthalpy"], data["Temperature"], kind='cubic', bounds_error=True)
 
 
 def inner_radius(pos):
@@ -73,20 +64,20 @@ def wall_temp(pos, fuel_temp):
     radius = inner_radius(pos)
 
     hydraulic_diameter = 2 * inp.channel_height
-    fuel_density = props('dens', fuel_temp)
-    fuel_viscosity = props('visc', fuel_temp)
+    density = fuel_density(fuel_temp)
+    viscosity = fuel_viscosity(fuel_temp)
 
     velocity = inp.fuel_flow_rate / ((np.pi * (radius + inp.inner_wall_thickness + inp.channel_height) ** 2 - np.pi * (
-            radius + inp.inner_wall_thickness) ** 2) * fuel_density)
-    re = fuel_density * velocity * hydraulic_diameter / fuel_viscosity
-    pr = fuel_viscosity * props('cp', fuel_temp) / props('cond', fuel_temp)
+            radius + inp.inner_wall_thickness) ** 2) * density)
+    re = density * velocity * hydraulic_diameter / viscosity
+    pr = viscosity * fuel_specific_heat(fuel_temp) / fuel_conductivity(fuel_temp)
 
     heat_flow = heat_flux(pos) * station_width * 2 * np.pi * radius
 
     def coolant_difference(coolant_wall_temp):
-        coolant_wall_viscosity = props('visc', coolant_wall_temp)
-        nu = 0.027 * re ** 0.8 * pr ** (1 / 3) * (fuel_viscosity / coolant_wall_viscosity) ** 0.14
-        coolant_transfer_coefficient = nu * props('cond', fuel_temp) / hydraulic_diameter
+        coolant_wall_viscosity = fuel_viscosity(coolant_wall_temp)
+        nu = 0.027 * re ** 0.8 * pr ** (1 / 3) * (viscosity / coolant_wall_viscosity) ** 0.14
+        coolant_transfer_coefficient = nu * fuel_conductivity(fuel_temp) / hydraulic_diameter
         convection_resistance = 1 / (coolant_transfer_coefficient * 2 * np.pi * station_width * (
                     radius + inp.inner_wall_thickness))
         temp = coolant_wall_temp - heat_flow * convection_resistance
@@ -106,7 +97,7 @@ def calc_fuel_temp(pos):
     """
     heat_flow = heat_flux(pos) * station_width * 2 * math.pi * inner_radius(pos)
     enthalpy_change = heat_flow / inp.fuel_flow_rate
-    enthalpy = np.cumsum(enthalpy_change[::-1])[::-1] + inp.input_enthalpy
+    enthalpy = np.cumsum(enthalpy_change[::-1])[::-1] + fuel_enthalpy(inp.fuel_input_temperature)
     return fuel_temperature(enthalpy)
 
 
@@ -123,7 +114,7 @@ def main():
     df['Fuel Temperature'] = calc_fuel_temp(df['Position'].to_numpy())
     df['Coolant Wall Temperature'], df['Gas Wall Temperature'] = \
         np.vectorize(wall_temp)(df['Position'].to_numpy(), df['Fuel Temperature'].to_numpy())
-    df.plot(x='Position', y='Radius')
+    df.plot(x='Position')
     plt.show()
 
 

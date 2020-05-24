@@ -17,6 +17,13 @@ enthalpy_lower_bound = -466070
 enthalpy_upper_bound = 547770
 temperature_coefficients = [-1.10030E-34, 1.57293E-29, -3.53013E-23, 6.01412E-17, -1.08504E-10, 3.70175E-04, 4.75311E+02]
 
+"""
+Path to file containing discrete data for fuel properties, which will be interpolated.
+Pressure should be constant and temperature varied.
+Should be a CSV file with columns titled Temperature, Density, Specific Heat, Thermal Conductivity, Viscosity, Enthalpy.
+Standard SI units with no prefixes should be used.
+"""
+fuel_properties_file = "kerosene_17E5Pa_fit.csv"
 
 """
 Chamber dimensions. All units are meters and degrees.
