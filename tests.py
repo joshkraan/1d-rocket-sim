@@ -1,5 +1,5 @@
 import unittest
-import main_new as mn
+import main as mn
 
 
 class Tests(unittest.TestCase):
