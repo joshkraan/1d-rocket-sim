@@ -14,12 +14,12 @@ fuel_properties_file = "kerosene_17E5Pa_fit.csv"
 """
 Chamber dimensions. All units are meters and degrees.
 """
-exit_diameter = 0.0981366
-throat_diameter = 0.05356
+exit_diameter = 0.18607
+throat_diameter = 0.1271
 diverging_half_angle = 15
 converging_half_angle = 30
-chamber_length = 0.23679
-chamber_diameter = 0.10940
+chamber_length = 0.31789
+chamber_diameter = 0.2198
 throat_bevel_radius = 0.05
 chamber_bevel_radius = 0.02
 
@@ -27,11 +27,11 @@ chamber_bevel_radius = 0.02
 Double-wall cooling parameters
 """
 inner_wall_thickness = 0.0015875  # m
-channel_height = 0.0001  # m
+channel_height = 0.001  # m
 wall_thermal_conductivity = 50  # W / (m K)
 surface_roughness = 0.001  # mm
-fuel_flow_rate = 0.7707  # kg/s
-lox_flow_rate = 1.76498  # kg/s
+fuel_flow_rate = 1.8237  # kg/s
+lox_flow_rate = 4.1763  # kg/s
 
 # fuel_input_pressure = 1820000  # Pa
 fuel_input_temperature = 300  # K
@@ -41,22 +41,13 @@ Heat flux calc info
 For CEARUN Results use Frozen comp (DOLPRE page 70)
 """
 # 2.29 OF
-chamber_pressure = 1877777.8  # Pa
-chamber_temperature = 3411.57  # K
-gas_gamma = 1.139  # unitless
-gas_viscosity = 1.0469e-4  # Pa S
-gas_specific_heat = 2082.2  # J / (kg K)
-gas_prandtl_number = 0.6223  # unitless
-cstar = 1786.0  # m/s
-
-# 1.8 OF
-# chamber_pressure = 1877777.8  # Pa
-# chamber_temperature = 3014.6  # K
-# gas_gamma = 1.1888  # unitless
-# gas_viscosity = 0.91417e-4  # Pa S
-# gas_specific_heat = 2180.8  # J / (kg K)
-# gas_prandtl_number = 0.5689  # unitless
-# cstar = 1747.8  # m/s
+chamber_pressure = 788888.89  # Pa
+chamber_temperature = 3304.4  # K
+gas_gamma = 1.2258  # unitless
+gas_viscosity = 1.0224e-4  # Pa S
+gas_specific_heat = 2.0755e3  # J / (kg K)
+gas_prandtl_number = 0.6190  # unitless
+cstar = 1719.1  # m/s
 
 # Thermal resistance of carbon deposit (DOLPRE 87)
 # Use low value for all to be conservative, should be experimentally determined
@@ -67,7 +58,7 @@ carbon_resistance = 0  # m^2 K / W
 """
 Stress calcs
 """
-coolant_pressure = 2.54e6  # Pa
+coolant_pressure = 1.065e6  # Pa
 
 elastic_modulus = 200e9  # Pa
 thermal_expansion_coeff = 13e-6  # m / m / K

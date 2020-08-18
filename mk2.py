@@ -14,12 +14,12 @@ fuel_properties_file = "kerosene_17E5Pa_fit.csv"
 """
 Chamber dimensions. All units are meters and degrees.
 """
-exit_diameter = 0.0981366
-throat_diameter = 0.05356
+exit_diameter = 0.147
+throat_diameter = 0.0766
 diverging_half_angle = 15
 converging_half_angle = 30
-chamber_length = 0.23679
-chamber_diameter = 0.10940
+chamber_length = 0.305
+chamber_diameter = 0.146
 throat_bevel_radius = 0.05
 chamber_bevel_radius = 0.02
 
@@ -27,11 +27,12 @@ chamber_bevel_radius = 0.02
 Double-wall cooling parameters
 """
 inner_wall_thickness = 0.0015875  # m
-channel_height = 0.0001  # m
-wall_thermal_conductivity = 50  # W / (m K)
+channel_height = 0.001  # m
+wall_thermal_conductivity = 385  # W / (m K)
 surface_roughness = 0.001  # mm
-fuel_flow_rate = 0.7707  # kg/s
-lox_flow_rate = 1.76498  # kg/s
+# TODO incorrect, this should be divided by two as there were 2 engines
+fuel_flow_rate = 2.16  # kg/s
+lox_flow_rate = 4.95  # kg/s
 
 # fuel_input_pressure = 1820000  # Pa
 fuel_input_temperature = 300  # K
@@ -40,37 +41,27 @@ fuel_input_temperature = 300  # K
 Heat flux calc info
 For CEARUN Results use Frozen comp (DOLPRE page 70)
 """
-# 2.29 OF
-chamber_pressure = 1877777.8  # Pa
-chamber_temperature = 3411.57  # K
-gas_gamma = 1.139  # unitless
-gas_viscosity = 1.0469e-4  # Pa S
-gas_specific_heat = 2082.2  # J / (kg K)
-gas_prandtl_number = 0.6223  # unitless
-cstar = 1786.0  # m/s
-
-# 1.8 OF
-# chamber_pressure = 1877777.8  # Pa
-# chamber_temperature = 3014.6  # K
-# gas_gamma = 1.1888  # unitless
-# gas_viscosity = 0.91417e-4  # Pa S
-# gas_specific_heat = 2180.8  # J / (kg K)
-# gas_prandtl_number = 0.5689  # unitless
-# cstar = 1747.8  # m/s
+chamber_pressure = 1.29e6  # Pa
+chamber_temperature = 3365.31  # K
+gas_gamma = 1.1366  # unitless
+gas_viscosity = 1.0363e-4  # Pa S
+gas_specific_heat = 2.0794e3  # J / (kg K)
+gas_prandtl_number = 0.6209  # unitless
+cstar = 1779.2  # m/s
 
 # Thermal resistance of carbon deposit (DOLPRE 87)
 # Use low value for all to be conservative, should be experimentally determined
 # 3.4e-4 corresponds to ~1000 in ^2 s F / BTU
 #carbon_resistance = 7e-4  # m^2 K / W
-carbon_resistance = 0  # m^2 K / W
+carbon_resistance = 0e-4  # m^2 K / W
 
 """
 Stress calcs
 """
-coolant_pressure = 2.54e6  # Pa
+coolant_pressure = 1.74e6  # Pa
 
-elastic_modulus = 200e9  # Pa
-thermal_expansion_coeff = 13e-6  # m / m / K
-poissons_ratio = 0.29  # unitless
+elastic_modulus = 117e9  # Pa
+thermal_expansion_coeff = 17e-6  # m / m / K
+poissons_ratio = 0.33  # unitless
 
 

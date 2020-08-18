@@ -40,7 +40,7 @@ Thermal calculations are done assuming a steady state. The approach shown by Nar
 \subsection{Heat Flux}
 Typically, the heat transfer coefficient would be calculated using something such as the Bartz equation~\cite{bartz_turbulent_1965}. The heat flux could then be calculated by multiplying the heat transfer coefficient by the difference between combustion temperature and a calculated adiabatic wall temperature. The heat transfer coefficient would have some dependence on the wall temperature, and iterative solving must be used to find an equilibrium.
 
-In our case, this approach would not work for several reasons. We are using film cooling, and while models have been developed for film cooling, their accuracy is questionable. We are also concerned about the accuracy of these methods, and instead want to base the heat flux off of measurements taken from hot fires. The only measurement we can realistically take is the heat flux, but the adiabatic wall temperature, the heat transfer coefficient, and the combustion temperature all determine the heat flux, and these can't be solved for with only the heat flux known.
+There are several issues with using this approach for our purposes. We are using film cooling, and while models have been developed for film cooling, their accuracy is questionable. We are also concerned about the accuracy of these methods, and instead want to base the heat flux off of measurements taken from hot fires. The only measurement we can realistically take is the heat flux, but the adiabatic wall temperature, the heat transfer coefficient, and the combustion temperature all determine the heat flux, and these can't be solved for with only the heat flux known.
 
 Due to these issues, the heat flux will be directly input into regen calculations. This is a large simplification, because the heat flux will change for each engine and cooling setup, but hopefully as we gather data we will be able to have an idea of what heat flux to expect and we can apply a safety factor.
 
@@ -69,7 +69,7 @@ DOLPRE~\cite{huang_modern_1992} recommends the standard Sieder-Tate equation for
   \end{aligned}
 \end{equation}
 
-\textbf{TODO: Update description} Here $Nu = h_c d / k$ (where $d$ is the hydraulic diameter and $k$ is the coolant thermal conductivity), $Re$ is the Reynolds number, $Pr$ is the Prandtl number, and $f$ is the Darcy friction factor, which for smooth surfaces can be expressed by the Petukhov correlation~\cite{bergman_fundamentals_2017}:
+\textbf{TODO: Update description} Here $Nu = h_c d / k$ (where $d$ is the hydraulic diameter and $k$ is the coolant thermal conductivity), and $f$ is the Darcy friction factor, which for smooth surfaces can be expressed by the Petukhov correlation~\cite{bergman_fundamentals_2017}:
 
 \begin{equation}
   f = (0.790 \ln (Re) - 1.64)^{-2} \qquad 3000 \lesssim Re \lesssim 5 \times 10^6
@@ -78,6 +78,19 @@ DOLPRE~\cite{huang_modern_1992} recommends the standard Sieder-Tate equation for
 The heat transfer coefficient calculations shown here assume smooth walls. This seems to be a safe assumption for thermal calculations, as the engine walls will likely be kept as smooth as possible to reduce pressure drop, and increasing surface roughness will only increase the effectiveness of regenerative cooling.
 
 These calculations also only apply to a specific range of conditions, so warnings will be included in the simulation for Reynolds numbers less than 3000 and coolant wall temperatures over 550K. The Prandtl number does not change significantly with temperature so it will very likely stay within the conditions.
+
+\subsection{Coolant Heat Transfer Coefficient}
+
+Calculation of the coolant heat transfer coefficient faces two major issues. The first is that with our engine parameters the flow tends to have Reynolds numbers in the range $3000 < Re < 10,000$, but many commonly used correlations are only valid for $Re > 10,000$. The second is that the flow in the cooling channel is annular, which can change the flow behaviour if the ratio between the outer and inner diameters of the cooling channel is not close to 1. This means that annular effects become more pronounced if the channel height increases and the engine diameter decreases.
+
+The hydraulic diameter for an annulus when calculated using the wetted perimeter method~\cite{bergman_fundamentals_2017} is twice the channel height, $2t$. Fuel properties are calculated using the REFPROP data and are used to determine the Reynolds and Prandtl numbers at each station.
+
+TODO: Nucleate boiling
+
+Three different correlations are currently implemented. The Sieder-Tate equation is recommended by DOLPRE:
+
+Property variation across the boundary layer is accounted for by the last term, where $\mu_w$ is the fluid viscosity at the wall temperature.
+
 
 \subsection{Thermal Resistance}
 The wall temperatures are calculated from the fuel temperature and the heat flow at each station. To do this, the thermal resistances for conduction through the inner liner and convection to the fuel are calculated and added in series. The thermal resistance in K/W to conduction can be given by the standard formula for the thermal resistance of a hollow cylinder,
@@ -116,6 +129,16 @@ The Darcy friction factor $f$ is calculated differently than in Section~\ref{sec
 \end{align}
 
 Where $\epsilon$ is the effective roughness height. These pressure drop calculations will be subject to large uncertainties, as they are being used for transition flow with Reynolds number less than 4000. The overall pressure drop is found from the sum of pressure drops calculated at each step.
+
+\section{Wall Stress}
+
+The inner wall of a coaxial-shell regeneratively cooled engine undergoes a combination of hoop stress and thermal stress. From DOLPRE~\cite{huang_modern_1992}, the maximum stress can be given by:
+\begin{equation}
+  S_c = \frac{(p_{co} -p_{g}) R}{t} + \frac{E \alpha q t}{2 (1 - \nu)k}
+\end{equation}
+Here $p_{co}$ is the coolant pressure, $p_g$ is the combustion pressure, $R$ is the radius, $t$ is the wall thickness, $E$ is the elastic modulus, $\alpha$ is the thermal expansion coefficient, $q$ is the heat flux, $k$ is the thermal conductivity, and $\nu$ is the Poisson's ratio.
+
+The coolant pressure is taken to be the input pressure. This is conservative and does not significantly affect the result as thermal stress dominates at the throat. Property variations with temperature likely play a significant role but are not currently implemented.
 
 \printbibliography
 
