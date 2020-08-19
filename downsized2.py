@@ -37,13 +37,13 @@ lox_flow_rate = 4.1763  # kg/s
 fuel_input_temperature = 300  # K
 
 """
-Heat flux calc info
-For CEARUN Results use Frozen comp (DOLPRE page 70)
+Inputs for CEARUN option
+Read manual, GAMMAs is not gas_gamma
 """
 # 2.29 OF
 chamber_pressure = 788888.89  # Pa
 chamber_temperature = 3304.4  # K
-gas_gamma = 1.2258  # unitless
+gas_gamma = 1.1755  # unitless
 gas_viscosity = 1.0224e-4  # Pa S
 gas_specific_heat = 2.0755e3  # J / (kg K)
 gas_prandtl_number = 0.6190  # unitless

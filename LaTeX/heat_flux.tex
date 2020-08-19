@@ -74,7 +74,17 @@ Through the contraction and expansion of the engine, combustion gas can be consi
 
 \section{Heat Flux Models}
 
+property evaluation at constant pressure changing temperature
+
+adiabatic wall temp or no
+
+effect of equilibrium
+
+The largest differences were between the Dittus-Boelter and Bartz models. This was found to be because of (in order of significance): the difference in constants, the throat curvature factor, and the breakdown of the assumption of constant Prandtl number and specific heat.
+
 \subsection{Bartz}
+
+%TODO temp dependence of viscosity
 
 The Bartz equation is commonly used for calculating rocket engine heat flux. The following form is common:
 
@@ -98,7 +108,7 @@ Here all gas properties are evaluated at stagnation, and the Renyolds number is 
   Re_{t, ns} = \frac{D_t \dot{m}}{A_t \mu_{ns}}
 \end{equation}
 
-The $\sigma$ term accounts for property variation in the boundary layer and along the length of the engine. Another form given by Bartz uses the free stream gas properties, and accounts for boundary layer property variation by evaluating gas viscosity and density at the arithmetic mean of the combustion gas and wall temperatures:
+The $\sigma$ term accounts for property variation in the boundary layer and along the length of the engine. Another form given by Bartz uses stagnation gas properties but local diameter and velocity. It has a boundary layer property variation term that uses the gas viscosity and density at the arithmetic mean of the free stream and wall temperatures:
 
 \begin{equation}
   Nu_{D} = 0.026 Re_{D}^{0.8} Pr^{0.4} \left( \frac{D_t}{R_c} \right)^{0.1} \left[ \left( \frac{\rho_{am}}{\rho} \right)^{0.8} \left(\frac{\mu_{am}}{\mu} \right)^{0.2}\right]
@@ -108,13 +118,10 @@ The $\sigma$ term accounts for property variation in the boundary layer and alon
 \subsection{Dittus-Boelter}
 
 %TODO just evaluate all properties at mean temp? Film cooling paper
+%TODO 0.3 or 0.4?
 
 \begin{equation}
-  Nu_{D} = 0.023 Re_{D}^{0.8} Pr^{0.3}
-\end{equation}
-
-\begin{equation}
-  Nu_{D} = 0.023 Re_{D}^{0.8} Pr^{0.3} \left[ \left( \frac{\rho_{ref}}{\rho} \right)^{0.8} \left(\frac{\mu_{ref}}{\mu} \right)^{0.2}\right]
+  Nu_{D} = 0.023 Re_{D}^{0.8} Pr^{0.4}
 \end{equation}
 
 \subsection{Sieder-Tate}
@@ -123,11 +130,30 @@ The $\sigma$ term accounts for property variation in the boundary layer and alon
   Nu_{D} = 0.027 Re_{D}^{0.8} Pr^{1/3} \left( \frac{\mu}{\mu_w} \right)^{0.14}
 \end{equation}
 
+\subsection{Colburn}
+
+\begin{equation}
+  Nu_x = 0.0296 Re_x^{0.8} Pr^{1/3}
+\end{equation}
+
+\begin{equation}
+  x_e = 3.53D \left[ 1 + \left( \frac{x}{3.53D} \right)^{-1.2}\right]^{-1/1.2}
+\end{equation}
+
+\section{OF Ratio}
+
+\subsection{Constant Pressure}
+
+\subsection{Changing Pressure}
 
 \section{Experimental Data}
 
 
+\section{Conclusion}
 
+Pintle recirculation zones
+
+Film cooling
 
 
 
