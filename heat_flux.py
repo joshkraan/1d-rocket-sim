@@ -15,11 +15,22 @@ import gas_properties
 from gas_properties import calc_gas_properties
 
 
-def adiabatic_wall_temp(pr, gamma, mach_number, chamber_temp):
-    recovery_factor = pr ** 0.33
-    a = 1 + recovery_factor * (gamma - 1) / 2 * mach_number ** 2
-    b = 1 + (gamma - 1) / 2 * mach_number ** 2
-    return chamber_temp * (a / b)
+def aw_temp(gas, states):
+    pr = states.cp * states.viscosity / states.thermal_conductivity
+    r = pr ** (1/3)
+    return states.T + r * (gas.T - states.T)
+
+
+def cea_aw_temp(pos):
+    r = inp.gas_prandtl_number ** 0.33
+
+    mach_number = np.zeros(pos.size)
+    for i in range(pos.size):
+        mach_number[i] = gas_properties.mach_number(inp.gas_gamma, pos[i])
+
+    a = 1 + r * (inp.gas_gamma - 1) / 2 * mach_number ** 2
+    b = 1 + (inp.gas_gamma - 1) / 2 * mach_number ** 2
+    return inp.chamber_temperature * (a / b)
 
 
 def cea_bartz(pos):
@@ -180,20 +191,29 @@ def scaled_heat_flux(pos):
 def main():
     position = np.linspace(0, geom.diverging_end, inp.num_stations, dtype=np.double)
     gas, states, mach = calc_gas_properties(position)
+    pr = states.cp * states.viscosity / states.thermal_conductivity
+    gamma = states.cp / states.cv
 
-    # col = colburn(position, states, mach)
-    dittus = dittus_boelter(position, states, mach)
-    # sieder = sieder_tate(position, states, mach)
-    bartz0 = cea_bartz(position)
-    bartz1 = bartz_free_stream(position, gas, states, mach)
-    bartz2 = bartz(position, gas, mach)
-    # plt.plot(position, col, linestyle=':')
-    plt.plot(position, bartz2, linestyle='-.')
-    plt.plot(position, bartz1, linestyle=':')
-    plt.plot(position, bartz0)
-    plt.plot(position, dittus)
-    # plt.plot(position, sieder, linestyle='--')
+    aw_cea = cea_aw_temp(position)
+    aw = aw_temp(gas, states)
+
+    plt.plot(position, aw_cea)
+    plt.plot(position, aw, linestyle=':')
     plt.show()
+
+    # # col = colburn(position, states, mach)
+    # dittus = dittus_boelter(position, states, mach)
+    # # sieder = sieder_tate(position, states, mach)
+    # bartz0 = cea_bartz(position)
+    # bartz1 = bartz_free_stream(position, gas, states, mach)
+    # bartz2 = bartz(position, gas, mach)
+    # # plt.plot(position, col, linestyle=':')
+    # plt.plot(position, bartz2, linestyle='-.')
+    # plt.plot(position, bartz1, linestyle=':')
+    # plt.plot(position, bartz0)
+    # plt.plot(position, dittus)
+    # # plt.plot(position, sieder, linestyle='--')
+    # plt.show()
 
 
 if __name__ == "__main__":

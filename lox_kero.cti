@@ -16,7 +16,7 @@
 
 ideal_gas(name="gas",
           elements=" C H O",
-          species=""" RP-1 O2(L) C CO CO2 H H2 H2O O OH O2 """,
+          species=""" RP-1 O2(L) CO CO2 H H2 H2O O OH O2 """,
           transport="Mix")
 
 
@@ -48,23 +48,6 @@ species(name = "O2(L)",
                      well_depth =    98.10,
                      polar =     1.95,
                      rot_relax =     1.80)
-       )
-
-species(name = "C",
-    atoms = " C:1 ",
-    thermo = (
-       NASA( [  200.00,  1000.00], [  2.554239550E+00,  -3.215377240E-04,
-                7.337922450E-07,  -7.322348890E-10,   2.665214460E-13,
-                8.544388320E+04,   4.531308480E+00] ),
-       NASA( [ 1000.00,  6000.00], [  2.605582980E+00,  -1.959343350E-04,
-                1.067372190E-07,  -1.642393900E-11,   8.187057520E-16,
-                8.541294430E+04,   4.192386810E+00] )
-             ),
-    transport = gas_transport(
-                     geom = "atom",
-                     diam =     3.30,
-                     well_depth =    71.40),
-    note = "L11/88"
        )
 
 species(name = "CO",
