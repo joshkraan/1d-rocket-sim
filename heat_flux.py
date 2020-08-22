@@ -194,26 +194,26 @@ def main():
     pr = states.cp * states.viscosity / states.thermal_conductivity
     gamma = states.cp / states.cv
 
-    aw_cea = cea_aw_temp(position)
-    aw = aw_temp(gas, states)
-
-    plt.plot(position, aw_cea)
-    plt.plot(position, aw, linestyle=':')
-    plt.show()
-
-    # # col = colburn(position, states, mach)
-    # dittus = dittus_boelter(position, states, mach)
-    # # sieder = sieder_tate(position, states, mach)
-    # bartz0 = cea_bartz(position)
-    # bartz1 = bartz_free_stream(position, gas, states, mach)
-    # bartz2 = bartz(position, gas, mach)
-    # # plt.plot(position, col, linestyle=':')
-    # plt.plot(position, bartz2, linestyle='-.')
-    # plt.plot(position, bartz1, linestyle=':')
-    # plt.plot(position, bartz0)
-    # plt.plot(position, dittus)
-    # # plt.plot(position, sieder, linestyle='--')
+    # aw_cea = cea_aw_temp(position)
+    # aw = aw_temp(gas, states)
+    #
+    # plt.plot(position, aw_cea)
+    # plt.plot(position, aw, linestyle=':')
     # plt.show()
+
+    # col = colburn(position, states, mach)
+    dittus = dittus_boelter(position, states, mach)
+    # sieder = sieder_tate(position, states, mach)
+    bartz0 = cea_bartz(position)
+    bartz1 = bartz_free_stream(position, gas, states, mach)
+    bartz2 = bartz(position, gas, mach)
+    # plt.plot(position, col, linestyle=':')
+    plt.plot(position, bartz2, linestyle='-.')
+    plt.plot(position, bartz1, linestyle=':')
+    plt.plot(position, bartz0)
+    plt.plot(position, dittus)
+    # plt.plot(position, sieder, linestyle='--')
+    plt.show()
 
 
 if __name__ == "__main__":

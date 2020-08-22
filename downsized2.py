@@ -36,12 +36,13 @@ lox_flow_rate = 4.1763  # kg/s
 # fuel_input_pressure = 1820000  # Pa
 fuel_input_temperature = 300  # K
 
+chamber_pressure = 788888.89  # Pa Used as initial estimate for solving
+
 """
 Inputs for CEARUN option
 Read manual, GAMMAs is not gas_gamma
 """
 # 2.29 OF
-chamber_pressure = 788888.89  # Pa
 chamber_temperature = 3304.4  # K
 gas_gamma = 1.1755  # unitless
 gas_viscosity = 1.0224e-4  # Pa S

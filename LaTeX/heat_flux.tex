@@ -29,12 +29,21 @@
 
 Combustion gas properties are commonly calculated using NASA's Chemical Equilibrium with Applications (CEA) \cite{} program, however this FORTRAN program is difficult to work with. Instead the combustion gas properties were calculated using Cantera as described by Youngblood \cite{}.
 
-Species included in the chemical equilibrium calculations were based off of those used in CEA and kerosene combustion models \cite{} as well as the availability of tranport properties. The species that were included in this analysis are: RP-1, LOX, CO, CO2, H, H2, H2O, O, OH, and O2. RP-1 and LOX were modelled with the same stoichiometry and heat of formation as used in CEA. Cantera requires transport parameters for all species, so RP-1 and LOX were assigned placeholder values with the understanding that equilibirum solutions contain essentially zero concentration of these species. Thermodynamic properties and Lennard-Jones transport parameters were taken from a high-temperature version of the GRI MECH 3.0 combustion mechanism \cite{} included with Cantera that has been extended from an upper temperature of 3500K to 6000K using thermodynamic properties from NASA \cite{}.
+Species included in the chemical equilibrium calculations were based off of those used in CEA and kerosene combustion models \cite{} as well as the availability of tranport properties. The species that were included in this analysis are: RP-1, LOX, CO, CO2, H, H2, H2O, O, OH, and O2. RP-1 and LOX were modelled with the same stoichiometry and heat of formation as used in CEA. Cantera requires transport parameters for all species, so RP-1 and LOX were assigned placeholder values with the understanding that equilibirum solutions contain essentially zero concentration of these species.
 
-\subsection{Axial Variation}
+Thermodynamic properties and Lennard-Jones transport parameters were taken from a high-temperature version of the GRI MECH 3.0 combustion mechanism \cite{} included with Cantera that has been extended from an upper temperature of 3500K to 6000K using thermodynamic properties from NASA \cite{}.
 
+\subsection{Property Evaluation}
 
-Chamber properties were calculated using the same method as Youngblood, and two nested root finders were used to calculate gas properties throughout the converging-diverging sections of the engine. The outer root finder solves the isentropic flow relation for pressure: %TODO cite
+The stagnation pressure is found by solving
+
+\begin{equation}
+  \dot{m} = p_0 A_t \sqrt{\frac{\gamma [2 / (\gamma + 1)]^{\frac{\gamma + 1}{\gamma - 1}}}{R_{gas} T_o}}
+\end{equation}
+
+The stagnation gas properties at each pressure are calculated using the same method as described by Youngblood.
+
+Two nested root finders were used to calculate gas properties throughout the converging-diverging sections of the engine. The outer root finder solves the isentropic flow relation for pressure: %TODO cite
 
 \begin{equation}
   \frac{p}{p_0} = (1 + \frac{\gamma - 1}{2} M^2) ^ {- \frac{\gamma}{\gamma - 1}}
@@ -46,7 +55,7 @@ The specific heat ratio for the combustion gas is calculated at each evaluated p
     \left( \frac{A}{A_t}\right)^2 = \frac{1}{M^2} \left\{ \frac{2}{\gamma + 1} \left[ 1 + \frac{1}{2} (\gamma - 1) M^2 \right] \right\}^{\frac{\gamma + 1}{\gamma - 1}}
 \end{equation}
 
-Despite requiring nested root finders, this method was found to perform better than solving the pressure and area ratio relations.
+Despite requiring nested root finders, this method was found to perform better than solving the pressure-area ratio relations.
 
 With the pressure and entropy known, all other gas properties can be calculated. The gas velocity is calculated from the mach number and the local speed of sound:
 
@@ -137,8 +146,8 @@ The Bartz equation is commonly used for calculating rocket engine heat flux. The
 \begin{equation}
     \label{equation:bartz}
     \begin{split}
-         h_g = \left[ \frac{0.026}{D_t^{0.2}} \left( \frac{\mu^{0.2} c_p}{{Pr}^{0.6}} \right)_{ns} \left( \frac{(p_c)_{ns}}{c^*} \right)^{0.8} \left( \frac{D_t}{R_c} \right)^{0.1} \right] \left( \frac{A_t}{A} \right)^{0.9} \sigma \\
-         \sigma = \frac{1}{\left[ \frac{1}{2} \left( \frac{T_{wg}}{(T_c)_{ns}} \right) \left( 1 + \frac{\gamma - 1}{2} M^2 \right) + \frac{1}{2}\right]^{0.8-m/5} \left[ 1 + \frac{\gamma - 1}{2} M^2 \right]^{m/5}}
+         h_g = \left[ \frac{0.026}{D_t^{0.2}} \left( \frac{\mu^{0.2} c_p}{{Pr}^{0.6}} \right)_{0} \left( \frac{p_0}{c^*} \right)^{0.8} \left( \frac{D_t}{R_c} \right)^{0.1} \right] \left( \frac{A_t}{A} \right)^{0.9} \sigma \\
+         \sigma = \frac{1}{\left[ \frac{1}{2} \left( \frac{T_{w}}{T_0} \right) \left( 1 + \frac{\gamma - 1}{2} M^2 \right) + \frac{1}{2}\right]^{0.8-m/5} \left[ 1 + \frac{\gamma - 1}{2} M^2 \right]^{m/5}}
     \end{split}
 \end{equation}
 
@@ -150,10 +159,10 @@ This form shows the pressure dependence of heat flux at a constant characteristi
   Nu_{t} = 0.026 Re_{t}^{0.8} Pr^{0.4} \left( \frac{D_t}{R_c} \right)^{0.1} \left( \frac{A_t}{A} \right)^{0.9} \sigma
 \end{equation}
 
-Here all gas properties are evaluated at stagnation, and the Reynolds number is evaluated at an effective throat velocity, so
+Here all gas properties are evaluated at stagnation, the throat diameter is the characteristic dimension, and the Reynolds number is evaluated at an effective throat velocity, so
 
 \begin{equation}
-  Re_{t} = \frac{D_t \dot{m}}{A_t \mu_{ns}}
+  Re_{t} = \frac{D_t (\dot{m} / A_t)}{ \mu_{ns}}
 \end{equation}
 
 The $\sigma$ term accounts for property variation in the boundary layer and along the length of the engine.

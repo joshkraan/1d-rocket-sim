@@ -16,7 +16,7 @@ sns.set()
 sns.set_style("ticks")
 
 
-def stagnation_pressure():
+def stagnation_properties():
     #TODO maybe return stagnation properties from here?
     #TODO bounds on root finder
     gas = ct.Solution('lox_kero.cti')
@@ -35,24 +35,20 @@ def stagnation_pressure():
         g = gas.cp / gas.cv
         return throat_area * p * np.sqrt(g * (2 / (g + 1)) ** ((g + 1) / (g - 1)) / (gas_constant * gas.T)) - mass_flow_rate
 
-    return brentq(residual, 5e5, 2e6)
+    stagnation_pressure = scipy.optimize.fsolve(residual, inp.chamber_pressure)
+    gas.TPY = 195, stagnation_pressure, 'RP-1:' + str(fuel_fraction) + ',' + 'O2(L):' + str(ox_fraction)
+    gas.equilibrate('HP')
+
+    return gas, stagnation_pressure
 
 
-def exit_pressure1(p_0, gamma):
+def exit_pressure_estimate(p_0, gamma):
     exit_mach = mach_number(gamma, geom.diverging_end)
     return p_0 * (1 + (gamma - 1) / 2 * exit_mach ** 2) ** (- gamma / (gamma - 1))
 
 
 def calc_gas_properties(pos):
-    # TODO calculate chamber and exit pressure
-
-    stagnation_gas = ct.Solution('lox_kero.cti')
-    stagnation_gas.basis = "mass"
-    of = inp.lox_flow_rate / inp.fuel_flow_rate
-    fuel_fraction = 1 / (1 + of)
-    ox_fraction = 1 - fuel_fraction
-    stagnation_gas.TPY = 195, inp.chamber_pressure, 'RP-1:' + str(fuel_fraction) + ',' + 'O2(L):' + str(ox_fraction)
-    stagnation_gas.equilibrate('HP')
+    stagnation_gas, p_0 = stagnation_properties()
 
     p_0 = inp.chamber_pressure
 
@@ -65,10 +61,7 @@ def calc_gas_properties(pos):
 
     ma = np.zeros(pos.size, dtype=np.float)
 
-    print(exit_pressure1(p_0, gas.cp / gas.cv))
-
-    #TODO
-    exit_pressure = 67730
+    estimated_exit_pressure = exit_pressure_estimate(p_0, stagnation_gas.cp / stagnation_gas.cv)
 
     for i in range(pos.size):
 
@@ -79,7 +72,7 @@ def calc_gas_properties(pos):
             mach = mach_number(gamma, pos[i])
             return (1 + (gamma - 1) / 2 * mach ** 2) ** (- gamma / (gamma - 1)) - p / p_0
 
-        pressure = brentq(residual, p_0, exit_pressure)
+        pressure = brentq(residual, p_0, 0.9 * estimated_exit_pressure)
         gas.SP = entropy, pressure
         gas.equilibrate('SP')
 
@@ -210,7 +203,7 @@ def mach_number(gamma, position):
 
 
 def main():
-    print(stagnation_pressure())
+    print(stagnation_properties()[1])
     position = np.linspace(0, geom.diverging_end, inp.num_stations, dtype=np.double)
     # t = time.time()
     gas, states, mach = calc_gas_properties(position)
