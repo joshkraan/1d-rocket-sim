@@ -33,8 +33,7 @@ def cea_aw_temp(pos):
     return inp.chamber_temperature * (a / b)
 
 
-def cea_bartz(pos):
-    gas_wall_temp = 500  # Conservative estimate
+def cea_bartz(pos, gas_wall_temp):
 
     radius = geom.radius(pos)
     local_area = np.pi * radius ** 2
@@ -52,9 +51,7 @@ def cea_bartz(pos):
     return htc
 
 
-def bartz(pos, gas, mach_number):
-
-    gas_wall_temp = 500  # Conservative estimate
+def bartz(pos, gas, mach_number, gas_wall_temp):
 
     radius = geom.radius(pos)
     local_area = np.pi * radius ** 2
@@ -75,9 +72,8 @@ def bartz(pos, gas, mach_number):
     return htc
 
 
-def bartz_free_stream(pos, gas, states, mach):
+def bartz_free_stream(pos, gas, states, mach, gas_wall_temp):
 
-    gas_wall_temp = 500  # Conservative estimate
     am_gas = ct.Solution("lox_kero.cti")
     am_gas.basis = "mass"
     am_states = ct.SolutionArray(am_gas, pos.size)
@@ -96,81 +92,96 @@ def bartz_free_stream(pos, gas, states, mach):
     return htc
 
 
-def dittus_boelter(pos, states, mach):
-    gas_wall_temp = 500  # Conservative estimate
+def dittus_boelter(pos, states, mach, gas_wall_temp, prandtl_correction, stagnation_temp):
+    pr_free_stream = states.cp * states.viscosity / states.thermal_conductivity
+
+    if prandtl_correction:
+        reference_temp = 0.5 * (states.T + gas_wall_temp) + 0.22 * pr_free_stream ** (1/3) * (stagnation_temp - states.T)
+    else:
+        reference_temp = 0.5 * (states.T + gas_wall_temp)
+
+    ref_gas = ct.Solution("lox_kero.cti")
+    ref_gas.basis = "mass"
+    ref_states = ct.SolutionArray(ref_gas, pos.size)
+    ref_states.TPX = states.TPX
+    ref_states.TP = reference_temp, states.P
+
+    velocity = mach * np.sqrt((states.cp / states.cv) * states.P / states.density)
+
+    re = ref_states.density * velocity * 2 * geom.radius(pos) / ref_states.viscosity
+    pr = ref_states.cp * ref_states.viscosity / ref_states.thermal_conductivity
+
+    nu = 0.023 * re ** 0.8 * pr ** 0.4
+    htc = nu * ref_states.thermal_conductivity / (2 * geom.radius(pos))
+    return htc
+
+
+def sieder_tate(pos, states, mach, gas_wall_temp):
+
+    wall_gas = ct.Solution("lox_kero.cti")
+    wall_gas.basis = "mass"
+    wall_states = ct.SolutionArray(wall_gas, pos.size)
+    wall_states.TPX = states.TPX
+    wall_states.TP = gas_wall_temp, states.P
+
+    diameter = 2 * geom.radius(pos)
+
+    velocity = mach * np.sqrt((states.cp / states.cv) * states.P / states.density)
+
+    re = states.density * velocity * diameter / states.viscosity
+    pr = states.cp * states.viscosity / states.thermal_conductivity
+
+    nu = 0.027 * re ** 0.8 * pr ** (1/3) * (states.viscosity / wall_states.viscosity) ** 0.14
+
+    htc = nu * states.thermal_conductivity / diameter
+
+    return htc
+
+
+def sieder_tate1(pos, states, gas_wall_temp):
+
+    wall_gas = ct.Solution("lox_kero.cti")
+    wall_gas.basis = "mass"
+    wall_states = ct.SolutionArray(wall_gas, pos.size)
+    wall_states.TPX = states.TPX
+    wall_states.TP = gas_wall_temp, states.P
+
+    diameter = 2 * geom.radius(pos)
+
+    velocity = (inp.fuel_flow_rate + inp.lox_flow_rate) / (np.pi * geom.radius(pos) ** 2 * states.density)
+
+    re = states.density * velocity * diameter / states.viscosity
+    pr = states.cp * states.viscosity / states.thermal_conductivity
+
+    nu = 0.027 * re ** 0.8 * pr ** (1/3) * (states.viscosity / wall_states.viscosity) ** 0.14
+
+    htc = nu * states.thermal_conductivity / diameter
+
+    return htc
+
+
+def colburn(pos, states, mach, gas_wall_temp, effective_position):
+
     am_gas = ct.Solution("lox_kero.cti")
     am_gas.basis = "mass"
     am_states = ct.SolutionArray(am_gas, pos.size)
     am_states.TPX = states.TPX
     am_states.TP = (states.T + gas_wall_temp) / 2, states.P
 
+    if effective_position:
+        diameter = 2 * geom.radius(pos)
+        x_eff = 3.53 * diameter * (1 + (pos / (3.53 * diameter)) ** (-1.2)) ** (-1 / 1.2)
+    else:
+        x_eff = pos
+
     velocity = mach * np.sqrt((states.cp / states.cv) * states.P / states.density)
 
-    re = am_states.density * velocity * 2 * geom.radius(pos) / am_states.viscosity
+    re = am_states.density * velocity * x_eff / am_states.viscosity
     pr = am_states.cp * am_states.viscosity / am_states.thermal_conductivity
-
-    nu = 0.023 * re ** 0.8 * pr ** 0.4
-    htc = nu * am_states.thermal_conductivity / (2 * geom.radius(pos))
-    return htc
-
-
-def sieder_tate(pos, states, mach):
-    #gas, states, mach = calc_gas_properties(pos)
-
-    gas_wall_temp = 500  # Conservative estimate
-
-    temperature, pressure = states.TP
-
-    diameter = 2 * geom.radius(pos)
-
-    gamma = states.cp / states.cv
-    density = states.density
-    viscosity = states.viscosity
-    thermal_cond = states.thermal_conductivity
-
-    velocity = mach * np.sqrt(gamma * pressure / density)
-
-    re = density * velocity * diameter / states.viscosity
-    pr = states.cp * states.viscosity / thermal_cond
-
-    states.TP = gas_wall_temp, pressure
-
-    nu = 0.027 * re ** 0.8 * pr ** (1/3) * (viscosity / states.viscosity) ** 0.14
-
-    htc = nu * thermal_cond / diameter
-
-    states.TP = temperature, pressure
-
-    return htc
-
-
-def colburn(pos, states, mach):
-    #gas, states, mach = calc_gas_properties(pos)
-
-    gas_wall_temp = 500  # Conservative estimate
-
-    temperature, pressure = states.TP
-    t_mean = (gas_wall_temp + temperature) / 2
-
-    diameter = 2 * geom.radius(pos)
-    x_eff = 3.53 * diameter * (1 + (pos / (3.53 * diameter)) ** (-1.2)) ** (-1/1.2)
-    #x_eff = pos
-
-    gamma = states.cp / states.cv
-    density = states.density
-
-    velocity = mach * np.sqrt(gamma * pressure / density)
-
-    states.TP = t_mean, pressure
-
-    re = states.density * velocity * x_eff / states.viscosity
-    pr = states.cp * states.viscosity / states.thermal_conductivity
 
     nu = 0.0296 * re ** 0.8 * pr ** (1/3)
 
-    htc = nu * states.thermal_conductivity / x_eff
-
-    states.TP = temperature, pressure
+    htc = nu * am_states.thermal_conductivity / x_eff
 
     return htc
 
@@ -191,28 +202,40 @@ def scaled_heat_flux(pos):
 def main():
     position = np.linspace(0, geom.diverging_end, inp.num_stations, dtype=np.double)
     gas, states, mach = calc_gas_properties(position)
-    pr = states.cp * states.viscosity / states.thermal_conductivity
-    gamma = states.cp / states.cv
 
-    # aw_cea = cea_aw_temp(position)
-    # aw = aw_temp(gas, states)
-    #
-    # plt.plot(position, aw_cea)
-    # plt.plot(position, aw, linestyle=':')
-    # plt.show()
+    aw_cea = cea_aw_temp(position)
+    aw = aw_temp(gas, states)
 
-    # col = colburn(position, states, mach)
-    dittus = dittus_boelter(position, states, mach)
-    # sieder = sieder_tate(position, states, mach)
-    bartz0 = cea_bartz(position)
-    bartz1 = bartz_free_stream(position, gas, states, mach)
-    bartz2 = bartz(position, gas, mach)
-    # plt.plot(position, col, linestyle=':')
-    plt.plot(position, bartz2, linestyle='-.')
-    plt.plot(position, bartz1, linestyle=':')
-    plt.plot(position, bartz0)
-    plt.plot(position, dittus)
-    # plt.plot(position, sieder, linestyle='--')
+    gas_wall_temp = 500
+
+    col = colburn(position, states, mach, gas_wall_temp, False) * aw
+    col_eff = colburn(position, states, mach, gas_wall_temp, True) * aw
+    dittus = dittus_boelter(position, states, mach, gas_wall_temp, False, gas.T) * aw
+    dittus_pr = dittus_boelter(position, states, mach, gas_wall_temp, True, gas.T) * aw
+    sieder = sieder_tate(position, states, mach, gas_wall_temp) * aw
+    bartz_cea = cea_bartz(position, gas_wall_temp) * aw_cea
+    bartz_free = bartz_free_stream(position, gas, states, mach, gas_wall_temp) * aw
+    bartz0 = bartz(position, gas, mach, gas_wall_temp) * aw
+
+    gas1, states1 = gas_properties.calc_gas_properties1(position)
+    sieder_new = sieder_tate1(position, states1, gas_wall_temp) * aw_temp(gas1, states1)
+
+    plt.plot(position, col, color='black', alpha=0.2)
+    plt.plot(position, col_eff, color='black', alpha=0.2)
+    plt.plot(position, dittus, color='black', alpha=0.2)
+    plt.plot(position, dittus_pr, color='black', alpha=0.2)
+    plt.plot(position, sieder, color='black', alpha=0.2)
+    plt.plot(position, bartz_cea, color='black', alpha=1, linestyle=':')
+    plt.plot(position, bartz_free, color='black', alpha=1, linestyle='--')
+    plt.plot(position, bartz0, color='black', alpha=1)
+
+    plt.plot(position, sieder_new, color='red')
+
+    plt.ylim(3e6, 1.4e7)
+    sns.despine()
+    plt.show()
+
+    plt.fill_between(position, bartz0, dittus, color='black', alpha=0.2)
     plt.show()
 
 

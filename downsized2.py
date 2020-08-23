@@ -37,6 +37,7 @@ lox_flow_rate = 4.1763  # kg/s
 fuel_input_temperature = 300  # K
 
 chamber_pressure = 788888.89  # Pa Used as initial estimate for solving
+equilibrium_expansion = True  # TODO reorganize
 
 """
 Inputs for CEARUN option
