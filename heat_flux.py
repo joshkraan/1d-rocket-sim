@@ -230,6 +230,7 @@ def main():
     plt.plot(position, bartz0, color='black', alpha=1)
 
     plt.plot(position, sieder_new, color='red')
+    plt.vlines(geom.throat_position, 0.4e7, 1.4e7)
 
     plt.ylim(3e6, 1.4e7)
     sns.despine()
