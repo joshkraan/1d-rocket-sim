@@ -35,37 +35,7 @@ Thermodynamic properties and Lennard-Jones transport parameters were taken from 
 
 \subsection{Property Evaluation}
 
-The stagnation pressure is found by solving
-
-\begin{equation}
-  \dot{m} = p_0 A_t \sqrt{\frac{\gamma [2 / (\gamma + 1)]^{\frac{\gamma + 1}{\gamma - 1}}}{R_{gas} T_o}}
-\end{equation}
-
-The stagnation gas properties at each pressure are calculated using the same method as described by Youngblood.
-
-Two nested root finders were used to calculate gas properties throughout the converging-diverging sections of the engine. The outer root finder solves the isentropic flow relation for pressure: %TODO cite
-
-\begin{equation}
-  \frac{p}{p_0} = (1 + \frac{\gamma - 1}{2} M^2) ^ {- \frac{\gamma}{\gamma - 1}}
-\end{equation}
-
-The specific heat ratio for the combustion gas is calculated at each evaluated pressure and the chamber entropy. The specifc heat ratio and the area ratio are used to solve the mach number equation using the other root finder. Subsonic or supersonic solutions are forced by changing the bracketing interval depending on axial location.
-
-\begin{equation}
-    \left( \frac{A}{A_t}\right)^2 = \frac{1}{M^2} \left\{ \frac{2}{\gamma + 1} \left[ 1 + \frac{1}{2} (\gamma - 1) M^2 \right] \right\}^{\frac{\gamma + 1}{\gamma - 1}}
-\end{equation}
-
-Despite requiring nested root finders, this method was found to perform better than solving the pressure-area ratio relations.
-
-With the pressure and entropy known, all other gas properties can be calculated. The gas velocity is calculated from the mach number and the local speed of sound:
-
-\begin{equation}
-  v = M \sqrt{\gamma p / \rho}
-\end{equation}
-
-\subsection{Property Evaluation}
-
-%TODO cite reacting_nozzle_flow
+%TODO cite reacting_nozzle_flow, cantera guide
 
 The procedure used to calculate the gas properties differs significantly from CEA. Instead of using a user-specified chamber pressure, the properties are calculated from engine geometry and flow rates.
 
@@ -158,7 +128,9 @@ Through the contraction and expansion of the engine, combustion gas can be consi
   \end{tabular}
 \end{table}
 
-All major species were found to have less than 1\% difference in mole fractions between Cantera and CEA throughout the engine. Stagnation thermodynamic properties match very well, which is expected as GRI MECH uses NASA thermodynamic data. Transport properties are consistently different; CEA uses empirical fits but Cantera uses the Lennard-Jones model so this isn't unexpected.
+All major species were found to have less than 1\% difference in mole fractions between Cantera and CEA throughout the engine. Stagnation thermodynamic properties match very well, which is expected as GRI MECH uses the same thermodynamic data as CEARUN. Transport properties are consistently different; CEA uses empirical fits but Cantera uses the Lennard-Jones model so this isn't unexpected.
+
+%TODO reword above
 
 \section{Heat Transfer Correlations}
 
@@ -197,7 +169,7 @@ The Bartz equation is commonly used for calculating rocket engine heat flux. The
     \end{split}
 \end{equation}
 
-$m$ is the exponent of the temperature dependence of viscosity, and it is commonly taken to be 0.6.
+Here $m$ is the exponent of the temperature dependence of viscosity, and it is commonly taken to be 0.6. The $\sigma$ term accounts for property variation in the boundary layer and along the length of the engine.
 
 This form shows the pressure dependence of heat flux at a constant characteristic velocity, however if the equation is rearranged into nondimensional parameters the fact that it is a modified version of the Dittus-Boelter equation is more clear.
 
@@ -205,15 +177,9 @@ This form shows the pressure dependence of heat flux at a constant characteristi
   Nu_{t} = 0.026 Re_{t}^{0.8} Pr^{0.4} \left( \frac{D_t}{R_c} \right)^{0.1} \left( \frac{A_t}{A} \right)^{0.9} \sigma
 \end{equation}
 
-Here all gas properties are evaluated at stagnation, the throat diameter is the characteristic dimension, and the Reynolds number is evaluated at an effective throat velocity, so
+Here all gas properties are evaluated at stagnation and the throat diameter is the characteristic dimension.
 
-\begin{equation}
-  Re_{t} = \frac{D_t (\dot{m} / A_t)}{ \mu_{ns}}
-\end{equation}
-
-The $\sigma$ term accounts for property variation in the boundary layer and along the length of the engine.
-
-Another form given by Bartz uses stagnation gas properties but local diameter and velocity. It has a boundary layer property variation term that uses the gas viscosity and density at the arithmetic mean of the free stream and wall temperatures:
+Another form given by Bartz also uses the stagnation gas properties but the characteristic dimension is the local diameter. It has a boundary layer property variation term that uses the gas viscosity and density at the arithmetic mean of the free stream and wall temperatures:
 
 \begin{equation}
   Nu_{D} = 0.026 Re_{D}^{0.8} Pr^{0.4} \left( \frac{D_t}{R_c} \right)^{0.1} \left[ \left( \frac{\rho_{am}}{\rho} \right)^{0.8} \left(\frac{\mu_{am}}{\mu} \right)^{0.2}\right]
@@ -231,11 +197,7 @@ The unmodified Dittus-Boelter equation the Bartz equation is based on is given b
   Nu_{D} = 0.023 Re_{D}^{0.8} Pr^{0.4}
 \end{equation}
 
-The Dittus-Boelter equation is known to be ill-suited to modelling flows with large property variations in the boundary layer. A proposed solution is to evaluate all properties at the arithmetic mean of the free stream and wall temperatures \cite{}. Another solution is to evaluate all properties at the reference temperature given by \cite{}:
-
-\begin{equation}
-  T_{ref} = 0.5(T + T_w) + 0.22 Pr^{1/3}(T_0 - T)
-\end{equation}
+The Dittus-Boelter equation is known to be ill-suited to modelling flows with large property variations in the boundary layer. A proposed solution is to evaluate all properties at the arithmetic mean of the free stream and wall temperatures \cite{}.
 
 \subsection{Sieder-Tate}
 
@@ -258,9 +220,6 @@ The Dittus-Boelter equation is known to be ill-suited to modelling flows with la
 \subsection{Constant Pressure}
 
 \subsection{Changing Pressure}
-
-\section{Experimental Data}
-
 
 \section{Conclusion}
 
