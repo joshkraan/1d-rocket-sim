@@ -63,9 +63,38 @@ With the pressure and entropy known, all other gas properties can be calculated.
   v = M \sqrt{\gamma p / \rho}
 \end{equation}
 
+\subsection{Property Evaluation}
+
+%TODO cite reacting_nozzle_flow
+
+The procedure used to calculate the gas properties differs significantly from CEA. Instead of using a user-specified chamber pressure, the properties are calculated from engine geometry and flow rates.
+
+The first step is the calculate the stagnation and throat properties, which are solved for together. At the throat of the engine, the following two conditions must be met:
+\begin{equation}\label{cond:mach}
+  v = a
+\end{equation}%
+\begin{equation}\label{cond:enthalpy}
+  h_0 = h + \frac{v^2}{2}
+\end{equation}
+
+The velocity and sound speed are calculated as follows:
+\begin{equation}
+  v = \frac{\dot{m}}{A \rho}
+\end{equation}%
+\begin{equation}
+  a = \sqrt{\left(\frac{\partial p}{\partial \rho}\right)_s}
+\end{equation}
+
+The partial derivative required to calculate the sounds speed is evaluated by perturbing the pressure at constant entropy \cite{}. If equilibirum expansion is used, the perturbed gas is equilibrized.
+
+For a given stagnation pressure, the stagnation gas properties can be fully calculated as described by Youngblood. The throat conditions can then be solved for by varying the throat pressure isentropically until condition~\ref{cond:mach} is met. If condition~\ref{cond:enthalpy} is met, the stagnation pressure is correct, if not, another stagnation pressure must be guessed. Two root finders were used to solve for the chamber and throat properties in this manner.
+
+With the stagnation enthalpy known, the conditions at all other points of the engine can be solved for by varying the pressure isentropically until condition~\ref{cond:enthalpy} is met. Both subsonic and supersonic solutions exist; specific solutions are forced by using the throat pressure to limit the solution range.
+
+
 \subsection{Frozen Boundary Layer Chemistry}
 
-CEA calculates ``frozen'' and ``equilibrium'' values for specific heat and thermal conductivity. Equilibrium values are taken to be the sum of the frozen value and a reaction term that accounts for chemical reactions occuring in the boundary layer. Equilibirum values for both are several times higher than frozen, and using the equilibrium values would lead to a calculated heat flux approximately 4.5 times higher (based on the Bartz equation).
+CEA calculates ``frozen'' and ``equilibrium'' values for specific heat and thermal conductivity. Equilibrium values are taken to be the sum of the frozen value and a reaction term that accounts for chemical reactions occuring in the boundary layer. Equilibirum values for both are several times higher than frozen, and using the equilibrium values gives a calculated heat flux approximately 4.5 times higher (based on the Bartz equation).
 
 Bartz \cite{page 46} discusses chemical reactions occuring in rocket engine boundary layers and the resulting increase in heat transfer. When dissociated species such as O, H, and OH are present in the free stream, they can cool against combustion walls and recombine exothermically in the boundary layer. Bartz notes that this effect would likely be maximum for a hydrogen and oxygen rocket at 100\% combustion efficiency, yet the increase in heat flux over a frozen layer is shown to be only 32\% and rapidly decreases with reduced combustion efficiency.
 
@@ -110,9 +139,26 @@ Through the contraction and expansion of the engine, combustion gas can be consi
   \end{tabular}
 \end{table}
 
-All major species were found to have less than 1\% difference in mole fractions between Cantera and CEA throughout the engine. Stagnation thermodynamic properties match very well, which is expected as GRI MECH uses NASA thermodynamic data. Transport properties are consistently different; CEA uses empirical fits but Cantera uses the Lennard-Jones model so this isn't unexpected.
+\begin{table}[H]
+  \centering
+  \caption{Cantera and CEA property comparison, OF = 2.29.}
+  \begin{tabular}{l c c c c c c}
+    \toprule
+    & \multicolumn{2}{c}{Stagnation} & \multicolumn{2}{c}{Throat} & \multicolumn{2}{c}{Exit} \\
+    \cmidrule(lr){2-3} \cmidrule(lr){4-5} \cmidrule(lr){6-7}
+    & Cantera & CEA Diff. & Cantera & CEA Diff. & Cantera & CEA Diff. \\
+    \midrule
+    P (Bar) & 8.3785 & N/A & 4.8249 & $0.37\%$ & 0.99181 & $0.01\%$ \\
+    T (K) & 3314.8 & $-0.09\%$ & 3151.2 & $-0.06\%$ & 2697.0 & $-0.09\%$ \\
+    $C_p$ ($10^3$ J/kg/K) & 2.0771 & $-0.05\%$ & 2.0675 & $-0.07\%$ & 2.0325 & $0.09\%$ \\
+    $\rho$ ($10^{-1}$ kg/m$^3$) & 6.6174 & $0.06\%$ & 4.0651 & $0.39\%$ & 1.0093 & $0.07\%$\\
+    $\mu$ ($10^{-5}$ Pa s) & 9.4775 & $8.06\%$ & 9.1404 & $8.21\%$ & 8.1726 & $8.64\%$ \\
+    $k$ ($10^{-1}$ W/m/K) & 3.5689 & $-3.79\%$ & 3.3898 & $-3.55\%$ & 2.8982 & $-2.86\%$\\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
-The density and temperature match well at stagnation but diverge from CEA along the length of the engine. This is likely because the specific heat ratios differ. Heat capacity consistently matches with CEA, which is expected as it has low temperature dependence.
+All major species were found to have less than 1\% difference in mole fractions between Cantera and CEA throughout the engine. Stagnation thermodynamic properties match very well, which is expected as GRI MECH uses NASA thermodynamic data. Transport properties are consistently different; CEA uses empirical fits but Cantera uses the Lennard-Jones model so this isn't unexpected.
 
 \section{Heat Transfer Correlations}
 

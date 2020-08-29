@@ -48,10 +48,6 @@ def exit_pressure_estimate(p_0, gamma):
 def calc_gas_properties(pos):
     stagnation_gas, p_0 = stagnation_properties()
 
-
-    #TODO remove this
-    p_0 = inp.chamber_pressure
-
     entropy = stagnation_gas.entropy_mass
 
     gas = ct.Solution('lox_kero.cti')
@@ -84,43 +80,39 @@ def calc_gas_properties(pos):
     return stagnation_gas, states, ma
 
 
-def calc_gas_properties1(pos):
-    stagnation_gas, throat_pressure = solve_chamber_throat()
-
-    p_0 = stagnation_gas.P
-
-    entropy = stagnation_gas.entropy_mass
+def calc_gas_properties1(pos, lox_flow_rate=inp.lox_flow_rate, fuel_flow_rate=inp.fuel_flow_rate):
+    stagnation_gas, throat_pressure = solve_chamber_throat(lox_flow_rate, fuel_flow_rate)
 
     gas = ct.Solution('lox_kero.cti')
     gas.basis = "mass"
     gas.state = stagnation_gas.state
     states = ct.SolutionArray(gas)
 
-    estimated_exit_pressure = exit_pressure_estimate(p_0, stagnation_gas.cp / stagnation_gas.cv)
-
-    average_radius = 0.5 * (geom.radius(pos - geom.station_width / 2) + geom.radius(pos + geom.station_width / 2))
+    estimated_exit_pressure = exit_pressure_estimate(stagnation_gas.P, stagnation_gas.cp / stagnation_gas.cv)
 
     for i in range(pos.size):
 
         def residual(p):
-            gas.SP = entropy, p
+            gas.SP = stagnation_gas.entropy_mass, p
             if inp.equilibrium_expansion:
                 gas.equilibrate('SP')
-            velocity = (inp.fuel_flow_rate + inp.lox_flow_rate) / (np.pi * geom.radius(pos[i]) ** 2 * gas.density)
-            h0 = gas.enthalpy_mass + velocity ** 2 / 2
+            vel = (fuel_flow_rate + lox_flow_rate) / (np.pi * geom.radius(pos[i]) ** 2 * gas.density)
+            h0 = gas.enthalpy_mass + vel ** 2 / 2
             return h0 - stagnation_gas.enthalpy_mass
 
-        #TODO figure out average radius discontinuity
-        upper_bound = p_0 if pos[i] < geom.throat_position else throat_pressure
+        upper_bound = stagnation_gas.P if pos[i] < geom.throat_position else throat_pressure
         lower_bound = throat_pressure if pos[i] < geom.throat_position else 0.9 * estimated_exit_pressure
-        pressure = brentq(residual, lower_bound, upper_bound, disp=True)
-        gas.SP = entropy, pressure
+        pressure = float(scipy.optimize.root_scalar(residual, bracket=[lower_bound, upper_bound]).root)
+
+        gas.SP = stagnation_gas.entropy_mass, pressure
         if inp.equilibrium_expansion:
             gas.equilibrate('SP')
 
         states.append(gas.state)
 
-    return stagnation_gas, states
+    velocity = (fuel_flow_rate + lox_flow_rate) / (np.pi * geom.radius(pos) ** 2 * states.density)
+
+    return stagnation_gas, states, velocity
 
 
 # Function is out of date
@@ -164,6 +156,7 @@ def calc_mole_fractions(pos, of):
     return stagnation_states, states
 
 
+@np.vectorize
 def mach_number(gamma, position):
     radius = geom.radius(position)
     local_area = np.pi * radius ** 2
@@ -174,49 +167,50 @@ def mach_number(gamma, position):
         return 1 / m ** 2 * (2 / (gamma + 1) * (1 + 0.5 * (gamma - 1) * m ** 2)) ** ((gamma + 1) / (gamma - 1)) - ratio ** 2
 
     if position < geom.throat_position:
-        return brentq(mach_equation, 1e-6, 1)
+        return scipy.optimize.root_scalar(mach_equation, bracket=[1e-6, 1], method='brentq').root
     else:
-        return brentq(mach_equation, 1, 50)
+        return scipy.optimize.root_scalar(mach_equation, bracket=[1, 50], method='brentq').root
 
 
-def solve_chamber_throat():
+def solve_chamber_throat(lox_flow_rate, fuel_flow_rate):
     gas = ct.Solution('lox_kero.cti')
     gas.basis = "mass"
 
-    gas1 = ct.Solution('lox_kero.cti')
-    gas1.basis = "mass"
+    gas_t = ct.Solution('lox_kero.cti')
+    gas_t.basis = "mass"
 
-    of = inp.lox_flow_rate / inp.fuel_flow_rate
+    of = lox_flow_rate / fuel_flow_rate
     fuel_fraction = 1 / (1 + of)
     ox_fraction = 1 - fuel_fraction
 
     def stagnation_residual(p):
         gas.TPY = 195, p, 'RP-1:' + str(fuel_fraction) + ',' + 'O2(L):' + str(ox_fraction)
         gas.equilibrate('HP')
-        entropy = gas.entropy_mass
-        stagnation_enthalpy = gas.enthalpy_mass
 
-        p_throat = brentq(throat_residual, inp.chamber_pressure, 67730, args=(entropy, gas.X))
-        gas.SP = entropy, p_throat
+        gas_t.SP = gas.entropy_mass, throat_pressure(stagnation_gas=gas)
         if inp.equilibrium_expansion:
-            gas.equilibrate('SP')
-        #sound_speed = np.sqrt((gas.cp / gas.cv) * gas.P / gas.density)
-        return gas.enthalpy_mass + sound_speed(gas) ** 2 / 2 - stagnation_enthalpy
+            gas_t.equilibrate('SP')
+        return gas_t.enthalpy_mass + sound_speed(gas_t) ** 2 / 2 - gas.enthalpy_mass
 
-    def throat_residual(p, entropy, mole_fractions):
-        gas1.SPX = entropy, p, mole_fractions
-        if inp.equilibrium_expansion:
-            gas1.equilibrate('SP')
-        velocity = (inp.fuel_flow_rate + inp.lox_flow_rate) / (np.pi * geom.throat_radius ** 2 * gas1.density)
-        #a = np.sqrt((gas1.cp / gas1.cv) * gas1.P / gas1.density)
-        return velocity - sound_speed(gas1)
+    def throat_pressure(stagnation_gas):
+        gas_t.state = stagnation_gas.state
+        gamma = stagnation_gas.cp / stagnation_gas.cv
+        throat_estimate = stagnation_gas.P * ((gamma + 1) / 2) ** (- gamma / (gamma - 1))
 
-    stagnation_pressure = scipy.optimize.fsolve(stagnation_residual, inp.chamber_pressure)
+        def throat_residual(p):
+            gas_t.SP = stagnation_gas.entropy_mass, p
+            if inp.equilibrium_expansion:
+                gas_t.equilibrate('SP')
+            velocity = (fuel_flow_rate + lox_flow_rate) / (np.pi * geom.throat_radius ** 2 * gas_t.density)
+            return velocity - sound_speed(gas_t)
+
+        return float(scipy.optimize.root(throat_residual, throat_estimate).x)
+
+    stagnation_pressure = float(scipy.optimize.root(stagnation_residual, inp.chamber_pressure).x)
     gas.TPY = 195, stagnation_pressure, 'RP-1:' + str(fuel_fraction) + ',' + 'O2(L):' + str(ox_fraction)
     gas.equilibrate('HP')
-    #TODO exit pressure (also above)
-    throat_pressure = brentq(throat_residual, inp.chamber_pressure, 67730, args=(gas.entropy_mass, gas.X))
-    return gas, throat_pressure
+
+    return gas, throat_pressure(stagnation_gas=gas)
 
 
 def sound_speed(gas):
@@ -243,8 +237,6 @@ def main():
     # print((inp.fuel_flow_rate + inp.lox_flow_rate) / (np.pi * geom.throat_radius ** 2 * gas.density))
     # print(np.sqrt(2 * (enthalpy - gas.enthalpy_mass)))
     position = np.linspace(0, geom.diverging_end, inp.num_stations, dtype=np.double)
-    gas, throat_pressure = solve_chamber_throat()
-    print(gas.P, throat_pressure)
 
     # chamber_pressure = gas.P
     # entropy = gas.entropy_mass
@@ -256,9 +248,9 @@ def main():
     #         gas.equilibrate('SP')
     #     vel = (inp.fuel_flow_rate + inp.lox_flow_rate) / (np.pi * geom.radius(position[779]) ** 2 * gas.density)
     #     h0 = gas.enthalpy_mass + vel ** 2 / 2
-    #     return (h0 ** 2 - enthalpy ** 2) / h0 ** 2
+    #     return (h0 - enthalpy) ** 2
     #
-    # pressure = np.linspace(67730, chamber_pressure, 1000, dtype=np.double)
+    # pressure = np.linspace(200000, chamber_pressure, 1000, dtype=np.double)
     # result = np.zeros(pressure.size)
     # for i in range(pressure.size):
     #     result[i] = residual(pressure[i])
@@ -294,12 +286,15 @@ def main():
     # # t = time.time()
     #gas, states, mach = calc_gas_properties(position)
 
-    gas1, states1 = calc_gas_properties1(position)
+    t = time.time()
+    gas1, states1, velocity = calc_gas_properties1(position)
+    print(gas1.thermal_conductivity, states1[781].thermal_conductivity, states1[999].thermal_conductivity)
+    print(time.time() - t)
     velocity = (inp.fuel_flow_rate + inp.lox_flow_rate) / (np.pi * geom.radius(position) ** 2 * states1.density)
     re = states1.density * velocity * 2 * geom.radius(position) / states1.viscosity
-    plt.vlines(geom.throat_position, 200, 500)
-    plt.plot(position, velocity)
-    #plt.hlines(throat_pressure, position[0], position[999])
+    # plt.vlines(geom.throat_position, 200, 500)
+    plt.plot(position, re)
+    # #plt.hlines(throat_pressure, position[0], position[999])
     plt.show()
 
 

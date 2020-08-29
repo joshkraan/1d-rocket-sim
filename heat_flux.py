@@ -92,6 +92,23 @@ def bartz_free_stream(pos, gas, states, mach, gas_wall_temp):
     return htc
 
 
+def bartz_free_stream1(pos, gas, states, velocity, gas_wall_temp):
+
+    am_gas = ct.Solution("lox_kero.cti")
+    am_gas.basis = "mass"
+    am_states = ct.SolutionArray(am_gas, pos.size)
+    am_states.TPX = (states.T + gas_wall_temp) / 2, states.P, states.X
+
+    re = gas.density * velocity * 2 * geom.radius(pos) / gas.viscosity
+    pr = gas.cp * gas.viscosity / gas.thermal_conductivity
+
+    sigma = (am_states.density / gas.density) ** 0.8 * (am_states.viscosity / gas.viscosity) ** 0.2
+
+    nu = 0.026 * re ** 0.8 * pr ** 0.4 * (inp.throat_diameter / inp.throat_bevel_radius) ** 0.1 * sigma
+    htc = nu * gas.thermal_conductivity / (2 * geom.radius(pos))
+    return htc
+
+
 def dittus_boelter(pos, states, mach, gas_wall_temp, prandtl_correction, stagnation_temp):
     pr_free_stream = states.cp * states.viscosity / states.thermal_conductivity
 
@@ -138,17 +155,14 @@ def sieder_tate(pos, states, mach, gas_wall_temp):
     return htc
 
 
-def sieder_tate1(pos, states, gas_wall_temp):
+def sieder_tate1(pos, states, velocity, gas_wall_temp):
 
     wall_gas = ct.Solution("lox_kero.cti")
     wall_gas.basis = "mass"
     wall_states = ct.SolutionArray(wall_gas, pos.size)
-    wall_states.TPX = states.TPX
-    wall_states.TP = gas_wall_temp, states.P
+    wall_states.TPX = gas_wall_temp, states.P, states.X
 
     diameter = 2 * geom.radius(pos)
-
-    velocity = (inp.fuel_flow_rate + inp.lox_flow_rate) / (np.pi * geom.radius(pos) ** 2 * states.density)
 
     re = states.density * velocity * diameter / states.viscosity
     pr = states.cp * states.viscosity / states.thermal_conductivity
@@ -217,8 +231,9 @@ def main():
     bartz_free = bartz_free_stream(position, gas, states, mach, gas_wall_temp) * aw
     bartz0 = bartz(position, gas, mach, gas_wall_temp) * aw
 
-    gas1, states1 = gas_properties.calc_gas_properties1(position)
-    sieder_new = sieder_tate1(position, states1, gas_wall_temp) * aw_temp(gas1, states1)
+    gas1, states1, velocity = gas_properties.calc_gas_properties1(position)
+    sieder_new = sieder_tate1(position, states1, velocity, gas_wall_temp) * aw_temp(gas1, states1)
+    bartz_new = bartz_free_stream1(position, gas1, states1, velocity, gas_wall_temp) * aw_temp(gas1, states1)
 
     plt.plot(position, col, color='black', alpha=0.2)
     plt.plot(position, col_eff, color='black', alpha=0.2)
@@ -230,6 +245,7 @@ def main():
     plt.plot(position, bartz0, color='black', alpha=1)
 
     plt.plot(position, sieder_new, color='red')
+    plt.plot(position, bartz_new, color='red')
     plt.vlines(geom.throat_position, 0.4e7, 1.4e7)
 
     plt.ylim(3e6, 1.4e7)
