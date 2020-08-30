@@ -43,13 +43,14 @@ equilibrium_expansion = True  # TODO reorganize
 Inputs for CEARUN option
 Read manual, GAMMAs is not gas_gamma
 """
-# 2.29 OF
+#2.29 OF
 chamber_temperature = 3304.4  # K
 gas_gamma = 1.1755  # unitless
 gas_viscosity = 1.0224e-4  # Pa S
 gas_specific_heat = 2.0755e3  # J / (kg K)
 gas_prandtl_number = 0.6190  # unitless
 cstar = 1719.1  # m/s
+
 
 # Thermal resistance of carbon deposit (DOLPRE 87)
 # Use low value for all to be conservative, should be experimentally determined

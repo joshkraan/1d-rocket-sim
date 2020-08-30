@@ -115,21 +115,19 @@ def sieder_tate(pos, states, velocity, gas_wall_temp):
     return htc
 
 
-def colburn(pos, states, mach, gas_wall_temp, effective_position):
+#TODO fix infinity at 0
+def colburn(pos, states, velocity, gas_wall_temp, effective_position):
 
     am_gas = ct.Solution("lox_kero.cti")
     am_gas.basis = "mass"
     am_states = ct.SolutionArray(am_gas, pos.size)
-    am_states.TPX = states.TPX
-    am_states.TP = (states.T + gas_wall_temp) / 2, states.P
+    am_states.TPX = (states.T + gas_wall_temp) / 2, states.P, states.X
 
     if effective_position:
         diameter = 2 * geom.radius(pos)
         x_eff = 3.53 * diameter * (1 + (pos / (3.53 * diameter)) ** (-1.2)) ** (-1 / 1.2)
     else:
         x_eff = pos
-
-    velocity = mach * np.sqrt((states.cp / states.cv) * states.P / states.density)
 
     re = am_states.density * velocity * x_eff / am_states.viscosity
     pr = am_states.cp * am_states.viscosity / am_states.thermal_conductivity
@@ -142,7 +140,6 @@ def colburn(pos, states, mach, gas_wall_temp, effective_position):
 
 
 def scaled_heat_flux(pos):
-    # Experimentally measured parameters for similar engine
     exp_pressure = 2e6  # Pa
     exp_diameter = 5e-2  # m
     exp_heat_flux = 3954e3  # W / m^2
@@ -156,44 +153,44 @@ def scaled_heat_flux(pos):
 
 def main():
     position = np.linspace(0, geom.diverging_end, inp.num_stations, dtype=np.double)
-    gas, states, mach = calc_gas_properties(position)
+    gas, states, velocity = calc_gas_properties(position)
 
     aw_cea = cea_aw_temp(position)
     aw = aw_temp(gas, states)
 
-    gas_wall_temp = 500
+    gas_wall_temp = 300
 
-    col = colburn(position, states, mach, gas_wall_temp, False) * aw
-    col_eff = colburn(position, states, mach, gas_wall_temp, True) * aw
-    dittus = dittus_boelter(position, states, mach, gas_wall_temp, False, gas.T) * aw
-    dittus_pr = dittus_boelter(position, states, mach, gas_wall_temp, True, gas.T) * aw
-    sieder = sieder_tate(position, states, mach, gas_wall_temp) * aw
-    bartz_cea = cea_bartz(position, gas_wall_temp) * aw_cea
-    bartz_free = bartz_free_stream(position, gas, states, mach, gas_wall_temp) * aw
-    bartz0 = bartz(position, gas, mach, gas_wall_temp) * aw
+    # col = colburn(position, states, velocity, gas_wall_temp, False) * (aw - gas_wall_temp)
+    # col_eff = colburn(position, states, velocity, gas_wall_temp, True) * (aw - gas_wall_temp)
+    dittus = dittus_boelter(position, states, velocity, gas_wall_temp) * (aw - gas_wall_temp)
+    sieder = sieder_tate(position, states, velocity, gas_wall_temp) * (aw - gas_wall_temp)
+    bartz_cea = cea_bartz(position, gas_wall_temp) * (aw_cea - gas_wall_temp)
+    bartz_free = bartz_free_stream(position, gas, states, velocity, gas_wall_temp) * (aw - gas_wall_temp)
+    bartz0 = bartz(position, gas, velocity, gas_wall_temp) * (aw - gas_wall_temp)
 
-    gas1, states1, velocity = gas_properties.calc_gas_properties1(position)
-    sieder_new = sieder_tate1(position, states1, velocity, gas_wall_temp) * aw_temp(gas1, states1)
-    bartz_new = bartz_free_stream1(position, gas1, states1, velocity, gas_wall_temp) * aw_temp(gas1, states1)
+    #plt.plot(position, col, color='black', alpha=0.2)
+    #plt.plot(position, col_eff, color='black', alpha=0.2)
+    plt.plot(position, bartz_cea, color='black', linestyle=':', label='Bartz CEA')
+    plt.plot(position, bartz0, color='black', alpha=1, label='Bartz Cantera')
+    plt.plot(position, bartz_free, color='black', alpha=1, linestyle='--', label='Bartz Free Stream')
+    plt.plot(position, dittus, color='red', label='Dittus-Boelter')
+    plt.plot(position, sieder, color='blue', label='Sieder-Tate')
 
-    plt.plot(position, col, color='black', alpha=0.2)
-    plt.plot(position, col_eff, color='black', alpha=0.2)
-    plt.plot(position, dittus, color='black', alpha=0.2)
-    plt.plot(position, dittus_pr, color='black', alpha=0.2)
-    plt.plot(position, sieder, color='black', alpha=0.2)
-    plt.plot(position, bartz_cea, color='black', alpha=1, linestyle=':')
-    plt.plot(position, bartz_free, color='black', alpha=1, linestyle='--')
-    plt.plot(position, bartz0, color='black', alpha=1)
+    plt.xlabel('Axial Position (m)')
+    plt.ylabel('Heat Flux (W/m$^2$)')
 
-    plt.plot(position, sieder_new, color='red')
-    plt.plot(position, bartz_new, color='red')
-    plt.vlines(geom.throat_position, 0.4e7, 1.4e7)
+    plt.legend()
 
-    plt.ylim(3e6, 1.4e7)
+    plt.ylim(2e6, 1.4e7)
+    plt.xlim(0, geom.diverging_end)
     sns.despine()
     plt.show()
 
-    plt.fill_between(position, bartz0, dittus, color='black', alpha=0.2)
+    plt.plot(position, bartz_free, label='2.29')
+    gas, states, velocity = calc_gas_properties(position, 2 * inp.fuel_flow_rate, inp.fuel_flow_rate)
+    plt.plot(position, bartz_free_stream(position, gas, states, velocity, gas_wall_temp) * (aw_temp(gas, states) - gas_wall_temp), label='2.00')
+    gas, states, velocity = calc_gas_properties(position, 1.5 * inp.fuel_flow_rate, inp.fuel_flow_rate)
+    plt.plot(position, bartz_free_stream(position, gas, states, velocity, gas_wall_temp) * (aw_temp(gas, states) - gas_wall_temp), label='1.50')
     plt.show()
 
 
