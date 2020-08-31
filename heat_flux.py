@@ -155,43 +155,104 @@ def main():
     position = np.linspace(0, geom.diverging_end, inp.num_stations, dtype=np.double)
     gas, states, velocity = calc_gas_properties(position)
 
-    aw_cea = cea_aw_temp(position)
-    aw = aw_temp(gas, states)
+    # aw_cea = cea_aw_temp(position)
+    # aw = aw_temp(gas, states)
+    #
+    # gas_wall_temp = 300
+    #
+    # # col = colburn(position, states, velocity, gas_wall_temp, False) * (aw - gas_wall_temp)
+    # # col_eff = colburn(position, states, velocity, gas_wall_temp, True) * (aw - gas_wall_temp)
+    # dittus = dittus_boelter(position, states, velocity, gas_wall_temp) * (aw - gas_wall_temp)
+    # sieder = sieder_tate(position, states, velocity, gas_wall_temp) * (aw - gas_wall_temp)
+    # bartz_cea = cea_bartz(position, gas_wall_temp) * (aw_cea - gas_wall_temp)
+    # bartz_free = bartz_free_stream(position, gas, states, velocity, gas_wall_temp) * (aw - gas_wall_temp)
+    # bartz0 = bartz(position, gas, velocity, gas_wall_temp) * (aw - gas_wall_temp)
+
+    # #plt.plot(position, col, color='black', alpha=0.2)
+    # #plt.plot(position, col_eff, color='black', alpha=0.2)
+    # plt.plot(position, bartz_cea, color='black', linestyle=':', label='Bartz CEA')
+    # plt.plot(position, bartz0, color='black', alpha=1, label='Bartz Cantera')
+    # plt.plot(position, bartz_free, color='black', alpha=1, linestyle='--', label='Bartz Free Stream')
+    # plt.plot(position, dittus, color='red', label='Dittus-Boelter')
+    # plt.plot(position, sieder, color='blue', label='Sieder-Tate')
+    #
+    # plt.xlabel('Axial Position (m)')
+    # plt.ylabel('Heat Flux (W/m$^2$)')
+    #
+    # plt.legend()
+    #
+    # plt.ylim(2e6, 1.4e7)
+    # plt.xlim(0, geom.diverging_end)
+    # sns.despine()
+    #
+    # plt.rcParams["figure.figsize"] = (8, 1)
+    # plt.savefig('Heat_Flux.png')
+    # plt.show()
+
+    # plt.plot(position, bartz_free, label='2.29', color='black')
+    # mass_flow_rate = inp.fuel_flow_rate + inp.lox_flow_rate
+    # fuel_fraction = 1 / (1 + 1.8)
+    # ox_fraction = 1 - fuel_fraction
+    # gas, states, velocity = calc_gas_properties(position, mass_flow_rate * ox_fraction, mass_flow_rate * fuel_fraction)
+    # plt.plot(position, bartz_free_stream(position, gas, states, velocity, gas_wall_temp) * (aw_temp(gas, states) - gas_wall_temp), label='1.80', color='black', linestyle='--')
+    # fuel_fraction = 1 / (1 + 1.5)
+    # ox_fraction = 1 - fuel_fraction
+    # gas, states, velocity = calc_gas_properties(position, ox_fraction * mass_flow_rate, fuel_fraction * mass_flow_rate)
+    # plt.plot(position, bartz_free_stream(position, gas, states, velocity, gas_wall_temp) * (aw_temp(gas, states) - gas_wall_temp), label='1.50', color='black', linestyle=':')
+    # plt.xlabel('Axial Position (m)')
+    # plt.ylabel('Heat Flux (W/m$^2$)')
+    # plt.legend()
+    # plt.rcParams["figure.figsize"] = (1, 1)
+    # sns.despine()
+    # plt.savefig('OF_Constant.png')
+    # plt.show()
+
+    # gas_wall_temp = 300
+    #
+    # inp.equilibrium_expansion = True
+    #
+    # gas, states, velocity = calc_gas_properties(position)
+    #
+    # aw = aw_temp(gas, states)
+    # bartz_free = bartz_free_stream(position, gas, states, velocity, gas_wall_temp) * (aw - gas_wall_temp)
+    # plt.plot(position, bartz_free, color='black', label='Equilibrium')
+    #
+    # inp.equilibrium_expansion = False
+    #
+    # gas, states, velocity = calc_gas_properties(position)
+    #
+    # aw = aw_temp(gas, states)
+    # bartz_free = bartz_free_stream(position, gas, states, velocity, gas_wall_temp) * (aw - gas_wall_temp)
+    # plt.plot(position, bartz_free, color='black', linestyle='--', label='Frozen')
+    #
+    # plt.xlabel('Axial Position (m)')
+    # plt.ylabel('Heat Flux (W/m$^2$)')
+    # plt.legend()
+    # plt.rcParams["figure.figsize"] = (1, 1)
+    # sns.despine()
+    # plt.savefig('Equilibrium_Frozen.png')
+    # plt.show()
 
     gas_wall_temp = 300
+    gas, states, velocity = calc_gas_properties(position)
 
-    # col = colburn(position, states, velocity, gas_wall_temp, False) * (aw - gas_wall_temp)
-    # col_eff = colburn(position, states, velocity, gas_wall_temp, True) * (aw - gas_wall_temp)
-    dittus = dittus_boelter(position, states, velocity, gas_wall_temp) * (aw - gas_wall_temp)
-    sieder = sieder_tate(position, states, velocity, gas_wall_temp) * (aw - gas_wall_temp)
-    bartz_cea = cea_bartz(position, gas_wall_temp) * (aw_cea - gas_wall_temp)
-    bartz_free = bartz_free_stream(position, gas, states, velocity, gas_wall_temp) * (aw - gas_wall_temp)
-    bartz0 = bartz(position, gas, velocity, gas_wall_temp) * (aw - gas_wall_temp)
-
-    #plt.plot(position, col, color='black', alpha=0.2)
-    #plt.plot(position, col_eff, color='black', alpha=0.2)
-    plt.plot(position, bartz_cea, color='black', linestyle=':', label='Bartz CEA')
-    plt.plot(position, bartz0, color='black', alpha=1, label='Bartz Cantera')
-    plt.plot(position, bartz_free, color='black', alpha=1, linestyle='--', label='Bartz Free Stream')
-    plt.plot(position, dittus, color='red', label='Dittus-Boelter')
-    plt.plot(position, sieder, color='blue', label='Sieder-Tate')
+    aw = aw_temp(gas, states)
+    bartz_free_htc = bartz_free_stream(position, gas, states, velocity, gas_wall_temp)
+    thermal_resistance = 3.74e-4  # m^2 K / W
+    htc = 1 / (1 / bartz_free_htc + thermal_resistance)
+    heat_flux = htc * (aw - gas_wall_temp)
+    plt.plot(position, bartz_free_htc * (aw - gas_wall_temp), color='black', label='No Deposit')
+    plt.plot(position, heat_flux, color='black', linestyle='--', label='Carbon Deposit')
 
     plt.xlabel('Axial Position (m)')
     plt.ylabel('Heat Flux (W/m$^2$)')
-
     plt.legend()
-
-    plt.ylim(2e6, 1.4e7)
-    plt.xlim(0, geom.diverging_end)
+    plt.rcParams["figure.figsize"] = (1, 1)
     sns.despine()
+    plt.savefig('Carbon_Deposit.png')
     plt.show()
 
-    plt.plot(position, bartz_free, label='2.29')
-    gas, states, velocity = calc_gas_properties(position, 2 * inp.fuel_flow_rate, inp.fuel_flow_rate)
-    plt.plot(position, bartz_free_stream(position, gas, states, velocity, gas_wall_temp) * (aw_temp(gas, states) - gas_wall_temp), label='2.00')
-    gas, states, velocity = calc_gas_properties(position, 1.5 * inp.fuel_flow_rate, inp.fuel_flow_rate)
-    plt.plot(position, bartz_free_stream(position, gas, states, velocity, gas_wall_temp) * (aw_temp(gas, states) - gas_wall_temp), label='1.50')
-    plt.show()
+
 
 
 if __name__ == "__main__":

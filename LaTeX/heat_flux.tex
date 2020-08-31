@@ -24,6 +24,13 @@
 
 \maketitle
 
+\section{Introduction}
+In this document a new procedure to calculate heat flux using Cantera is detailed. The Feynman ``Downsized 2'' outputs are used for all example calculations.
+
+The work here will make future heat flux calculations much easier. The effects of varying engine parameters can easily be seen without requiring the intermediate step of running them through NASA's CEA program, which is easy to misuse.
+
+The heat flux calculated here will be used to look at the feasability of regenerative cooling, and could also be integrated with film cooling calulations being done by other team members.
+
 \section{Gas Properties}
 
 Combustion gas properties are commonly calculated using NASA's Chemical Equilibrium with Applications (CEA)~\cite{gorden_computer_1996} program, however this FORTRAN program is difficult to work with. Instead the combustion gas properties were calculated using Cantera as described by Youngblood~\cite{youngblood_design_2015}.
@@ -111,9 +118,9 @@ Through the contraction and expansion of the engine, combustion gas can be consi
   \end{tabular}
 \end{table}
 
-All major species were found to have less than 1\% difference in mole fractions between Cantera and CEA throughout the engine. Stagnation thermodynamic properties match very well, which is expected as GRI MECH uses the same thermodynamic data as CEA. Transport properties are consistently different; the empirical fits used by CEA are likely more accurate than the Lennard-Jones model used here, however the difference in calculated heat flux was found to be negligible.
+All major species were found to have less than 1\% difference in mole fractions between Cantera and CEA throughout the engine. Stagnation thermodynamic properties match very well, which is expected as GRI MECH uses the same thermodynamic data as CEA. Transport properties are consistently different; the empirical fits used by CEA are likely more accurate than the Lennard-Jones model used here, however the difference in calculated heat flux was found to be small.
 
-\section{Heat Transfer Correlations}
+\section{Heat Transfer Correlations}\label{sec:heat_transfer}
 
 It appears to be accepted to use the difference between the adiabatic wall temperature and the wall temperature as the driving potential for heat flux~\cite{huang_modern_1992, bartz_turbulent_1965, grisson_liquid_1991}, so that was adopted here as well. The adiabatic wall temperature is given by:
 
@@ -129,17 +136,9 @@ The recovery factor $r$ is commonly given as:
 
 The gas wall temperature was taken to be a constant value of 300K, as would be the case on engine startup. The influence of the gas wall temperature is discussed in Section~\ref{sec:wall_temp}.
 
-Many models require property evaluation at temperatures other than the free stream temperature. For these models, the gas temperature was changed in Cantera while keeping the pressure constant.
-
-%TODO effect of equilibrium
-
-%TODO redo below
-
-The largest difference was between the Dittus-Boelter and Bartz models, at 30\%. This was found to be because of the difference in constants (11\%), the throat curvature factor (10\%), and the breakdown of the assumption of constant Prandtl number and specific heat (9\%).
+When property evaluation at temperatures other than the free stream temperature is required, the gas temperature was changed in Cantera while keeping the pressure constant.
 
 \subsection{Bartz}
-
-%TODO temp dependence of viscosity
 
 The Bartz equation is commonly used for calculating rocket engine heat flux. The following form is common:
 
@@ -167,7 +166,7 @@ Another form given by Bartz also uses the stagnation gas properties but the char
   Nu_{D} = 0.026 Re_{D}^{0.8} Pr^{0.4} \left( \frac{D_t}{R_c} \right)^{0.1} \left[ \left( \frac{\rho_{am}}{\rho} \right)^{0.8} \left(\frac{\mu_{am}}{\mu} \right)^{0.2}\right]
 \end{equation}
 
-Three forms of the Bartz equation are graphed. The version with a property variation term (Equations~\ref{equation:bartz}~\&~\ref{equation:bartz1}) is shown based purely off of CEA data with $m=0.6$ and also off of Cantera data where $m=0.75$ was found to better fit the temperature dependence of the gas viscosity. The free stream version of Bartz (Equation~\ref{eqn:bartz_free}) is also shown.
+Three forms of the Bartz equation are graphed. The version with a property variation term (Equations~\ref{equation:bartz}~\&~\ref{equation:bartz1}) is shown based off of both purely CEA data with $m=0.6$ and Cantera data where $m=0.75$ was found to better fit the temperature dependence of the gas viscosity. The free stream version of Bartz (Equation~\ref{eqn:bartz_free}) is also shown.
 
 \subsection{Dittus-Boelter}
 
@@ -187,17 +186,93 @@ When continuing with the theme of applying simple pipe-flow correlations to rock
   Nu_{D} = 0.027 Re_{D}^{0.8} Pr^{1/3} \left( \frac{\mu}{\mu_w} \right)^{0.14}
 \end{equation}
 
+\section{Calculated Heat Flux}
+
+The calculated heat flux using the methods described in Section~\ref{sec:heat_transfer} is shown in Figure~\ref{fig:heat_flux}.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth]{Heat_Flux.png}
+  \caption{Calculated heat flux, OF=2.29.}
+  \label{fig:heat_flux}
+\end{figure}
+
+The Bartz correlations all agree well and are within 5\% of each other. The heat flux calculated with CEA values is the lower than the two Cantera curves --- this is likely due to the difference in transport properties.
+
+Despite directly applying the common Sieder-Tate equation to a rocket engine, it appears to match decently well with the Bartz values.
+
+The largest difference was between the Dittus-Boelter and Bartz models, at 30\%. This was found to be because of the difference in constants (11\%), the throat curvature factor (10\%), and the breakdown of the assumption of constant Prandtl number and specific heat (9\%).
+
 \section{Modifying Factors}
+
+The free stream Bartz correlation (Equation~\ref{eqn:bartz_free}) is used to illustrate the following effects.
 
 \subsection{OF Ratio}
 
-\subsection{Soot Deposition}
+The OF Ratio can be reduced by keeping the total mass flow rate the same, or by decreasing the fuel flow rate. The effects of both are shown in Figure~\ref{fig:of_ratio}.
+
+\begin{figure}[H]
+  \centering
+  \begin{subfigure}{.5\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{OF_Constant.png}
+    \caption{Constant $\dot{m}$}
+  \end{subfigure}%
+  \begin{subfigure}{.5\textwidth}
+    \centering
+    \includegraphics[width=\linewidth]{OF_Variable.png}
+    \caption{Variable $\dot{m}$}
+  \end{subfigure}
+  \caption{Effects of OF ratio on heat flux.}
+  \label{fig:of_ratio}
+\end{figure}
+
+Other factors not accounted for here may make this difference more dramatic. At higher OF ratios the presence of dissociated species is greater, which can increase heat flux, and at lower OF ratios the effect of carbon deposition on the walls is greater~\cite{cook_advanced_1980}.
+
+\subsection{Frozen or Equilibrium Expansion}
+As noted before, the effects of assuming equilibrium or frozen expansion were found to be minor, and are shown in Figure~\ref{fig:equilibrium}. Reality would be somewhere in between these two extremes.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\linewidth]{Equilibrium_Frozen.png}
+  \caption{Heat flux with frozen and equilibrium expansion, OF=2.29.}
+  \label{fig:equilibrium}
+\end{figure}
+
+\subsection{Carbon Deposition}
+
+Carbon deposition on combustion walls can significantly increase the thermal resistance and decrease the heat flux into the walls~\cite[Page 86]{huang_modern_1992}. This effect can also be increased by using fuel film cooling~\cite[Page 35]{campbell_thrust_1963}.
+
+For calculating the heat flux with a carbon deposit, the deposit is assumed to be at the combustion gas temperature, and a modified heat transfer coefficient is calculated by using the thermal resistance of the deposit~\cite{huang_modern_1992}:
+\begin{equation}
+  h_{gc} = \frac{1}{\frac{1}{h_g} + R}
+\end{equation}
+Huang and Huzel give the thermal resistance of a carbon deposit for a 7 MPa engine as a function of area ratio, with values ranging from approximately $3.7 \times 10^{-4}$ m$^2$K/W to $6.8 \times 10^{-4}$ m$^2$K/W. The thermal resistance is lowest at the throat.
 
 \subsection{Wall Temperature}\label{sec:wall_temp}
 
 \subsection{Flow Recirculation}
 
+The recirculation zones that cause the famous combustion stability of pintle injectors can also cause higher chamber heat flux than predicted, as the combustion gas velocity near the wall can be much larger than the average cross-sectional velocity~\cite[Page 81]{bartz_turbulent_1965}.
+
+A (very) simple estimate of this effect can be found by assuming that the combustion gas in the inner half of the radius flows towards the injector at the same velocity as the outer half of the radius, which flows towards the nozzle. It can be shown that this velocity must be twice the cross sectionally averaged velocity. Based off of the correlations in Section~\ref{sec:heat_transfer}, this would increase the heat flux by $74\%$.
+
+Bartz presents data for an Enzian injector, which features similar recirculation. The measured chamber heat flux is nearly $100\%$ higher than predicted --- surprisingly close to the crude estimate done here.
+
 \subsection{Combustion Efficiency}
+The previous results have all assumed perfect combustion performance. If the combustion efficiency is reduced, the chamber pressure and temperature would change, as well as species mole fractions.
+
+From the correlations in Section~\ref{sec:heat_transfer} it can be seen that the heat transfer coefficient is proportional to the mass flux to the 0.8 power:
+\begin{equation}
+  h_g \propto \left(\frac{\dot{m}}{A}\right)^{0.8}
+\end{equation}
+The throat mass flux is more or less proportional to the chamber pressure:
+\begin{equation}
+  \frac{\dot{m}}{A_t}  = p_0 \sqrt{\frac{\gamma [2 / (\gamma + 1)]^{\frac{\gamma + 1}{\gamma - 1}}}{R_{gas} T_o}}
+\end{equation}
+This leads to the oft-cited result that the throat heat flux is proportional to the chamber pressure to the 0.8 power. However, in the case of inefficient combustion, the chamber pressure would decrease, but the mass flux would stay the same. The largest reduction in heat flux would most likely come from the reduction in the combustion gas temperature.
+
+The form of equation~\ref{equation:bartz} is useful when looking at the influence of parameter changes. The gas specific heat and Prandtl number are relatively constant over a wide temperature range. The gas viscosity varies significantly, however it is only to power of 0.2. This indicates it would likely take a large reduction in combustion performance to produce a significantly lower heat flux than calculations assuming perfect combustion.
 
 \section{Conclusion}
 
