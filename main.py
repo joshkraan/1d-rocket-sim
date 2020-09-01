@@ -129,6 +129,9 @@ def pressure_drop(radius, fuel_temp):
 
 
 def main():
+    # TODO find a way to do chamber-only (can't change bounds because station_width doesn't change)
+    # Eg: position = position1[position1 < inp.chamber_length]
+
     position = np.linspace(0, geom.diverging_end, inp.num_stations, dtype=np.double)
     # bartz = bartz_heat_flux(position)
     # bartz1 = bartz_heat_flux1(position)

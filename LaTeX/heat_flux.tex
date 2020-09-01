@@ -65,7 +65,6 @@ For a given stagnation pressure, the stagnation gas properties can be fully calc
 
 With the stagnation enthalpy known, the conditions at all other points of the engine can be solved for by varying the pressure isentropically until condition~\ref{cond:enthalpy} is met. Both subsonic and supersonic solutions exist; specific solutions are forced by using the throat pressure to limit the solution range.
 
-
 \subsection{Frozen Boundary Layer Chemistry}
 
 CEA calculates ``frozen'' and ``equilibrium'' values for specific heat and thermal conductivity. Equilibrium values are taken to be the sum of the frozen value and a reaction term that accounts for chemical reactions occurring in the boundary layer. Equilibrium values for both are several times higher than frozen, and using the equilibrium values gives a calculated heat flux approximately 4.5 times higher (based on the Bartz equation).
@@ -93,8 +92,6 @@ The presence of dissociated species is not insignificant for this engine, as can
 \subsection{Frozen Contraction and Expansion}
 
 Through the contraction and expansion of the engine, combustion gas can be considered to either be in equilibrium (mole fractions change along length of engine) or the composition could be frozen. Both methods were implemented, but this was found to make little difference to heat flux calculations.
-
-%TODO look into more
 
 \subsection{Property Comparison}
 
@@ -227,7 +224,7 @@ The OF Ratio can be reduced by keeping the total mass flow rate the same, or by 
   \label{fig:of_ratio}
 \end{figure}
 
-Other factors not accounted for here may make this difference more dramatic. At higher OF ratios the presence of dissociated species is greater, which can increase heat flux, and at lower OF ratios the effect of carbon deposition on the walls is greater~\cite{cook_advanced_1980}.
+Other factors not accounted for here may make this difference more dramatic. At higher OF ratios the presence of dissociated species is greater, which can increase heat flux, and at lower OF ratios the effect of carbon deposition on the walls could be greater~\cite{cook_advanced_1980}.
 
 \subsection{Frozen or Equilibrium Expansion}
 As noted before, the effects of assuming equilibrium or frozen expansion were found to be minor, and are shown in Figure~\ref{fig:equilibrium}. Reality would be somewhere in between these two extremes.
@@ -240,16 +237,29 @@ As noted before, the effects of assuming equilibrium or frozen expansion were fo
 \end{figure}
 
 \subsection{Carbon Deposition}
-
-Carbon deposition on combustion walls can significantly increase the thermal resistance and decrease the heat flux into the walls~\cite[Page 86]{huang_modern_1992}. This effect can also be increased by using fuel film cooling~\cite[Page 35]{campbell_thrust_1963}.
-
-For calculating the heat flux with a carbon deposit, the deposit is assumed to be at the combustion gas temperature, and a modified heat transfer coefficient is calculated by using the thermal resistance of the deposit~\cite{huang_modern_1992}:
+Carbon deposition can significantly decrease the heat flux into combustion walls~\cite[Page 86]{huang_modern_1992}. The material deposited has a very high thermal resistance and can reach high temperatures, reducing the temperature difference driving the heat flux into the walls. If the difference between the adiabatic wall temperature and the gas wall temperature is still used, then a modified heat transfer coefficient can be calculated from the thermal resistance of the deposit:
 \begin{equation}
   h_{gc} = \frac{1}{\frac{1}{h_g} + R}
 \end{equation}
-Huang and Huzel give the thermal resistance of a carbon deposit for a 7 MPa engine as a function of area ratio, with values ranging from approximately $3.7 \times 10^{-4}$ m$^2$K/W to $6.8 \times 10^{-4}$ m$^2$K/W. The thermal resistance is lowest at the throat.
+
+The process is difficult to model and should be measured experimentally. It is generally accepted that deposition is lower for higher combustion gas mass fluxes (and therefore higher chamber pressures), and that it is lowest at the throat~\cite{huang_modern_1992, makel_carbon_1990}. The effect has been found to be greater at lower OF ratios~\cite{cook_advanced_1980}. Film cooling creates a region of low OF ratio near the walls, and can increase deposition~\cite[Page 35]{campbell_thrust_1963}.
+
+Masters et al \cite{masters_high-pressure_1988} report an approximately 40\% reduction in heat transfer coefficient at the throat for a LOX/RP-1 engine, and directly applying data for the thermal resistance of carbon deposits in a 7 MPa engine given by Huang and Hazel gives a reduction of around 60\%.
+
+Carbon layers can build up to their maximum thickness in 1 to 2 seconds~\cite{makel_carbon_1990}, at which point they can become unstable and flake off~\cite{sellers_effect_1961}. This can lead to cyclic spikes in heat flux.
+
+Studies on carbon deposition with high combustion efficiency ($>94\%$) have found a lack of deposition~\cite{makel_carbon_1990, lausten_carbon_1985}. Makel suggests that deposition is caused by poor injector mixing efficiency causing regions of low mixture ratio. This is supported by chemical equilibrium calculations, which only show elemental carbon at very low mixture ratios. The effects of the pintle injector geometry and running fuel or oxidizer centered are likely worth looking into.
 
 \subsection{Wall Temperature}\label{sec:wall_temp}
+
+The maximum gas wall temperature can be found by assuming that the coolant wall is at the boiling temperature of the coolant. The boiling point of kerosene was found to be 618K (Section~\ref{sec:regen}). A 1/16 inch steel wall was assumed, and the throat heat flux was iterated to find an equilibrium gas wall temperature of 897K. This represents the maximum gas wall temperature at the throat, elsewhere it would be lower. Figure~\ref{fig:wall_temp} shows the heat flux assuming a constant wall temperature of 897K. The throat heat flux was reduced by 28\%.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.5\linewidth]{Wall_Temp.png}
+  \caption{Heat flux at maximum wall temperature, OF=2.29.}
+  \label{fig:wall_temp}
+\end{figure}
 
 \subsection{Flow Recirculation}
 
@@ -274,11 +284,31 @@ This leads to the oft-cited result that the throat heat flux is proportional to 
 
 The form of equation~\ref{equation:bartz} is useful when looking at the influence of parameter changes. The gas specific heat and Prandtl number are relatively constant over a wide temperature range. The gas viscosity varies significantly, however it is only to power of 0.2. This indicates it would likely take a large reduction in combustion performance to produce a significantly lower heat flux than calculations assuming perfect combustion.
 
+\section{Regenerative Cooling}\label{sec:regen}
+
+A simple analysis of the feasibility of regenerative cooling is conducted here.
+
+Low thrust rocket engines are difficult to regeneratively cool. Thrust is proportional to the mass flow rate, and heat flux is proportional to the mass flow rate to the power of 0.8. This means that as engine thrust decreases the amount of coolant decreases faster than the heat flux.
+
+In steady-state operation all the heat generated in the engine must be absorbed by the coolant without the free stream of the coolant exceeding its boiling temperature. If the coolant flow is capable of this, it only indicates that regenerative cooling is \textit{technically} possible; unrealistic channel geometry may be required to keep the walls from melting. The details of channel geometry will be discussed separately.
+
+Huber et al~\cite{huber_preliminary_2009} developed a thermophysical model for RP-1 based on a surrogate mixture that they say is applicable up to temperatures of 800 K and pressures of 60 MPa. After reaching out to them, they provided files for the surrogate for use in NIST REFPROP~\cite{lemmon_nist_2018}.
+
+The engine is divided into sections, and the heat flow into each section can be calculated from the heat flux and the internal surface area of the section. As the engine is in thermal equilibrium, all heat flow into each section must be taken out by the fuel, so the change in stagnation enthalpy at each station must be~\cite{naraghi_simple_2008}
+\begin{equation}
+  \Delta i = \frac{q A}{\dot{m}},
+\end{equation}
+where $q$ is the heat flux at the start of the station, $A$ is the area of the station, and $\dot{m}$ is the mass flow rate of the fuel. REFPROP data is then used to calculate the fuel temperature at each station.
+
+Assuming a $20\%$ pressure drop across the injector and a $15\%$ pressure drop through the regenerative channels, the fuel input pressure was specified as 1.12 MPa. At this pressure, the fuel boiling temperature calculated by REFPROP is approximately 618K.
+
+Chamber-only and nozzle-throat-only regenerative cooling were first studied separately using the Bartz heat flux, with the fuel input pressure and temperature at 1.12 MPa and 300K. With chamber-only cooling the fuel temperature increased by $\sim 230$ degrees, and with nozzle-throat-only cooling the fuel temperature increased by $\sim 200$ degrees. Regenerative cooling of the entire engine was only possible when the entire heat flux was scaled down by $25\%$.
+
+Chamber-only cooling was not possible when the heat flux was increased by $75\%$ to account for the possible increase due to recirculation.
+
 \section{Conclusion}
 
-Pintle recirculation zones
-
-Film cooling
+On startup of the engine, the throat heat flux is predicted to be approximately 12 MW/m$^2$ and the chamber heat flux is predicted to range from 4.5 to 9 MW/m$^2$ depending on the significance of recirculation. If the combustion efficiency isn't too high, within 1 to 2 seconds a carbon layer could build up on the combustion walls, dramatically reducing the heat flux. Whether or not regenerative cooling is at all possible will likely depend on combustion gas recirculation and carbon buildup. 
 
 \printbibliography
 

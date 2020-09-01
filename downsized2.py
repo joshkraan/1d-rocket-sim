@@ -9,7 +9,7 @@ Pressure should be constant and temperature varied.
 Should be a CSV file with columns titled Temperature, Density, Specific Heat, Thermal Conductivity, Viscosity, Enthalpy.
 Standard SI units with no prefixes should be used.
 """
-fuel_properties_file = "kerosene_17E5Pa_fit.csv"
+fuel_properties_file = "Kerosene_11E5Pa.csv"
 # TODO update fuel properties to correct pressure
 """
 Chamber dimensions. All units are meters and degrees.

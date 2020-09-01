@@ -7,6 +7,7 @@ import downsized2 as inp
 import engine_geometry as geom
 import gas_properties
 from gas_properties import calc_gas_properties
+from main import calc_fuel_temp
 
 
 def aw_temp(gas, states):
@@ -153,7 +154,7 @@ def scaled_heat_flux(pos):
 
 def main():
     position = np.linspace(0, geom.diverging_end, inp.num_stations, dtype=np.double)
-    gas, states, velocity = calc_gas_properties(position)
+    #gas, states, velocity = calc_gas_properties(position)
 
     # aw_cea = cea_aw_temp(position)
     # aw = aw_temp(gas, states)
@@ -233,24 +234,31 @@ def main():
     # plt.savefig('Equilibrium_Frozen.png')
     # plt.show()
 
-    gas_wall_temp = 300
     gas, states, velocity = calc_gas_properties(position)
 
     aw = aw_temp(gas, states)
-    bartz_free_htc = bartz_free_stream(position, gas, states, velocity, gas_wall_temp)
-    thermal_resistance = 3.74e-4  # m^2 K / W
-    htc = 1 / (1 / bartz_free_htc + thermal_resistance)
-    heat_flux = htc * (aw - gas_wall_temp)
-    plt.plot(position, bartz_free_htc * (aw - gas_wall_temp), color='black', label='No Deposit')
-    plt.plot(position, heat_flux, color='black', linestyle='--', label='Carbon Deposit')
+    plt.plot(position, bartz_free_stream(position, gas, states, velocity, 300) * (aw - 300), color='black', label='300K')
+    plt.plot(position, bartz_free_stream(position, gas, states, velocity, 897) * (aw - 897), color='black', linestyle=':', label='897K')
 
     plt.xlabel('Axial Position (m)')
     plt.ylabel('Heat Flux (W/m$^2$)')
     plt.legend()
     plt.rcParams["figure.figsize"] = (1, 1)
     sns.despine()
-    plt.savefig('Carbon_Deposit.png')
+    plt.savefig('Wall_Temp.png')
     plt.show()
+
+    # position1 = np.linspace(0, geom.diverging_end, inp.num_stations, dtype=np.double)
+    # position = position1[position1 < inp.chamber_length]
+    #
+    # gas, states, velocity = calc_gas_properties(position)
+    #
+    # aw = aw_temp(gas, states)
+    # heat_flux = bartz_free_stream(position, gas, states, velocity, 300) * (aw - 300)
+    # fuel_temp = calc_fuel_temp(geom.radius(position), 1.75 * heat_flux)
+    # plt.plot(position, fuel_temp)
+    # plt.show()
+
 
 
 

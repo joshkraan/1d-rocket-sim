@@ -20,7 +20,7 @@ ideal_gas(name="gas",
           transport="Mix")
 
 
-# Transport properties for RP-1 and O2(L) are INCORRECT
+# Transport properties for RP-1 and O2(L) are placeholders
 
 species(name = "RP-1",
     atoms = " C:1  H:1.95 ",
