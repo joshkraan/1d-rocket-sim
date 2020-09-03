@@ -4,7 +4,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import cantera as ct
 
-import downsized2 as inp
+import inputs as inp
 import engine_geometry as geom
 
 sns.set()

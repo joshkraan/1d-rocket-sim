@@ -9,7 +9,7 @@ import cantera as ct
 import math
 import time
 
-import downsized2 as inp
+import inputs as inp
 import engine_geometry as geom
 from gas_properties import calc_gas_properties
 
@@ -129,10 +129,10 @@ def pressure_drop(radius, fuel_temp):
 
 
 def main():
-    # TODO find a way to do chamber-only (can't change bounds because station_width doesn't change)
-    # Eg: position = position1[position1 < inp.chamber_length]
-
+    # TODO remove station_width, directly calculate in functions
     position = np.linspace(0, geom.diverging_end, inp.num_stations, dtype=np.double)
+    chamber_only = position[position < inp.chamber_length]
+
     # bartz = bartz_heat_flux(position)
     # bartz1 = bartz_heat_flux1(position)
     # sns.lineplot(position, bartz)

@@ -8,23 +8,23 @@ General engine parameters
 """
 
 # Chamber dimensions. All units are meters and degrees.
-exit_diameter = 0.18607
-throat_diameter = 0.1271
+exit_diameter = 0.1447
+throat_diameter = 0.0934
 diverging_half_angle = 15
 converging_half_angle = 30
-chamber_length = 0.31789
-chamber_diameter = 0.2198
+chamber_length = 0.3315
+chamber_diameter = 0.1615
 throat_bevel_radius = 0.05
 chamber_bevel_radius = 0.02
 
-fuel_flow_rate = 1.8237  # kg/s
-lox_flow_rate = 4.1763  # kg/s
+fuel_flow_rate = 0.961  # kg/s
+lox_flow_rate = 2.20  # kg/s
 
 equilibrium_expansion = True
 
 # Design chamber pressure (Feynman)
 # Used as initial estimate
-chamber_pressure = 788888.89  # Pa
+chamber_pressure = 770000  # Pa
 
 """
 Regenerative cooling parameters

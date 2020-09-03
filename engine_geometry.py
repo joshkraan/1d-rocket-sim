@@ -3,7 +3,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import math
 
-import downsized2 as inp
+import inputs as inp
 
 sns.set()
 sns.set_style("ticks")

@@ -3,11 +3,24 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import cantera as ct
 
-import downsized2 as inp
+import inputs as inp
 import engine_geometry as geom
 import gas_properties
 from gas_properties import calc_gas_properties
 from main import calc_fuel_temp
+
+
+def heat_flux(pos, gas_wall_temp):
+    """
+    High-level function to calculate heat flux with Bartz free-stream model.
+    Example usage is in main().
+    :param pos: Numpy array of positions to calculate heat flux at.
+    :param gas_wall_temp: Temperature of inner engine wall, can be scalar or a numpy array of the same size as pos.
+    :return: Heat flux at specified positions, W/m^2
+    """
+    gas, states, velocity = calc_gas_properties(pos)
+    aw = aw_temp(gas, states)
+    return bartz_free_stream(pos, gas, states, velocity, gas_wall_temp) * (aw - gas_wall_temp)
 
 
 def aw_temp(gas, states):
@@ -154,7 +167,12 @@ def scaled_heat_flux(pos):
 
 def main():
     position = np.linspace(0, geom.diverging_end, inp.num_stations, dtype=np.double)
-    #gas, states, velocity = calc_gas_properties(position)
+    plt.plot(position, heat_flux(position, 300))
+    plt.show()
+
+    # Commented code below was used to produce graphs in heat flux documentation.
+
+    # gas, states, velocity = calc_gas_properties(position)
 
     # aw_cea = cea_aw_temp(position)
     # aw = aw_temp(gas, states)
@@ -234,19 +252,19 @@ def main():
     # plt.savefig('Equilibrium_Frozen.png')
     # plt.show()
 
-    gas, states, velocity = calc_gas_properties(position)
-
-    aw = aw_temp(gas, states)
-    plt.plot(position, bartz_free_stream(position, gas, states, velocity, 300) * (aw - 300), color='black', label='300K')
-    plt.plot(position, bartz_free_stream(position, gas, states, velocity, 897) * (aw - 897), color='black', linestyle=':', label='897K')
-
-    plt.xlabel('Axial Position (m)')
-    plt.ylabel('Heat Flux (W/m$^2$)')
-    plt.legend()
-    plt.rcParams["figure.figsize"] = (1, 1)
-    sns.despine()
-    plt.savefig('Wall_Temp.png')
-    plt.show()
+    # gas, states, velocity = calc_gas_properties(position)
+    #
+    # aw = aw_temp(gas, states)
+    # plt.plot(position, bartz_free_stream(position, gas, states, velocity, 300) * (aw - 300), color='black', label='300K')
+    # plt.plot(position, bartz_free_stream(position, gas, states, velocity, 897) * (aw - 897), color='black', linestyle=':', label='897K')
+    #
+    # plt.xlabel('Axial Position (m)')
+    # plt.ylabel('Heat Flux (W/m$^2$)')
+    # plt.legend()
+    # plt.rcParams["figure.figsize"] = (1, 1)
+    # sns.despine()
+    # plt.savefig('Wall_Temp.png')
+    # plt.show()
 
     # position1 = np.linspace(0, geom.diverging_end, inp.num_stations, dtype=np.double)
     # position = position1[position1 < inp.chamber_length]
