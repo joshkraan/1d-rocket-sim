@@ -7,7 +7,6 @@ import inputs as inp
 import engine_geometry as geom
 import gas_properties
 from gas_properties import calc_gas_properties
-from main import calc_fuel_temp
 
 
 def heat_flux(pos, gas_wall_temp):

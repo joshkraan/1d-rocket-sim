@@ -6,6 +6,8 @@
 \usepackage{amssymb}
 \usepackage{amsmath}
 \usepackage{multicol}
+\usepackage{graphicx}
+\usepackage{float}
 \usepackage[style=ieee]{biblatex}
 \usepackage[bookmarks, unicode]{hyperref}
 
@@ -21,93 +23,75 @@
 
 \section{Purpose}
 
-TODO: Change to present tense instead of future.
-
-This document will record the theory behind the calculations done in Python for the regenerative cooling of a double-walled regenerative cooled rocket engine. Assumptions and justifications will be briefly stated along with the theory used.
+This document records the theory behind the calculations done in Python for the regenerative cooling of future engines. Assumptions and justifications are briefly stated along with the theory used.
 
 \section{Fuel Properties}
 
-The properties of the fuel change with pressure and temperature, and it is difficult to model as it is a mixture made up of hundreds of components. No model was found for the Exxsol D40 we are using, but it is assumed to be similar to RP-1.
+The properties of the fuel change with pressure and temperature, and it is difficult to model as it is a mixture made up of hundreds of components. No model was found for the Exxsol D40 we are using, so it was assumed to be similar to RP-1.
 
 Huber et al~\cite{huber_preliminary_2009} developed a thermophysical model for RP-1 based on a surrogate mixture that they say is applicable up to temperatures of 800 K and pressures of 60 MPa. After reaching out to them, they provided files for the surrogate for use in NIST REFPROP~\cite{lemmon_rp10}. REFPROP is paid software and the version available to us is limited, so it does not have a Python wrapper like later versions.
 
-In the pressure range expected in the channels the fuel properties do not change significantly, so they will be assumed to only depend on temperature. REFPROP is used to generate fuel properties for temperatures ranging from 270 K to 650 K, with pressure set to the fuel inlet pressure. Cubic interpolation is then used to create a smooth function for each property.
+In the pressure range expected in the channels the fuel properties do not change significantly, so they were assumed to only depend on temperature. REFPROP was used to generate fuel properties for temperatures ranging from 300 K to the boiling point of the fuel, with pressure set to the fuel inlet pressure. Cubic interpolation was then used to create a smooth function for each property.
 
 \section{Thermal Calculations}
 
-Thermal calculations are done assuming a steady state. The approach shown by Naraghi and Foulon~\cite{naraghi_simple_2008} is mainly used, where the engine is divided into sections along its length and thermal equilibrium calculations are done marching from the nozzle (where the fuel is input) to the injector. The step size is assumed to be small enough that the diameter of each section can be considered constant.
+Thermal calculations were done assuming a steady state. The approach shown by Naraghi and Foulon~\cite{naraghi_simple_2008} was mainly used, where the engine is divided into sections along its length and thermal equilibrium calculations are done marching from fuel input location to the injector. The step size was assumed to be small enough that the diameter of each section can be considered constant.
 
 \subsection{Heat Flux}
-Typically, the heat transfer coefficient would be calculated using something such as the Bartz equation~\cite{bartz_turbulent_1965}. The heat flux could then be calculated by multiplying the heat transfer coefficient by the difference between combustion temperature and a calculated adiabatic wall temperature. The heat transfer coefficient would have some dependence on the wall temperature, and iterative solving must be used to find an equilibrium.
 
-There are several issues with using this approach for our purposes. We are using film cooling, and while models have been developed for film cooling, their accuracy is questionable. We are also concerned about the accuracy of these methods, and instead want to base the heat flux off of measurements taken from hot fires. The only measurement we can realistically take is the heat flux, but the adiabatic wall temperature, the heat transfer coefficient, and the combustion temperature all determine the heat flux, and these can't be solved for with only the heat flux known.
-
-Due to these issues, the heat flux will be directly input into regen calculations. This is a large simplification, because the heat flux will change for each engine and cooling setup, but hopefully as we gather data we will be able to have an idea of what heat flux to expect and we can apply a safety factor.
+It has been previously shown that the engine heat flux can vary dramatically depending on several factors that must be experimentally measured. Because of this, the heat flux is directly input into these calculations to allow experimental data to be used. This is a conservative approach, as the heat flux will decrease as the wall temperature increases, and this also simplifies steady-state calculations.
 
 \subsection{Fuel Temperature}
-The heat flow into each section can be calculated from the heat flux and the internal surface area of the section. As the engine is in thermal equilibrium, all heat flow into this section must be taken out by the fuel, so the change in stagnation enthalpy at each station must be~\cite{naraghi_simple_2008}
+The heat flow into each section can be calculated from the heat flux and the internal surface area of the section. As the engine is in thermal equilibrium, all heat flow into each section must be taken out by the fuel, so the change in specific stagnation enthalpy at each station must be~\cite{naraghi_simple_2008}
 \begin{equation}
   \Delta i = \frac{q A}{\dot{m}},
 \end{equation}
 where $q$ is the heat flux at the start of the station, $A$ is the area of the station, and $\dot{m}$ is the mass flow rate of the fuel. REFPROP data can then be used to calculate the fuel temperature at each station.
 
 \subsection{Coolant Heat Transfer Coefficient}\label{sec:coefficient}
-The calculation of the coolant heat transfer coefficient is done with the assumption that fuel flow will act more like flow between two parallel plates than flow through an annulus. In annuli, as the ratio between the inner and outer diameters decreases the region of maximum fluid velocity shifts towards the inner wall~\cite{gnielinski_heat_2009}. With Version 5 of Feynman outputs and estimates of 1/6 inch thick walls and 2mm thick channels $d_i / d_o \approx 0.98$, which is assumed to be close enough to 1 (the parallel plate case). This means that standard pipe flow heat transfer correlations can be used to model the double wall cooling jacket.
 
-The effective hydraulic diameter of the channel is~\cite{bergman_fundamentals_2017} $D_h = 4A_c / P$, where $A_c$ is the channel cross-sectional area and $P$ is the wetted perimeter. For both an annulus and parallel plates, this reduces to twice the channel thickness, $2t$.
+Calculation of the coolant heat transfer coefficient faces two major issues. The first is that with our engine parameters the flow tends to have Reynolds numbers in the range $3000 < Re < 10,000$, but many commonly used correlations are only valid for $Re > 10,000$. The second is that the flow in the cooling channel is annular, which can change the flow behavior if the ratio between the outer and inner diameters of the cooling channel is not close to 1. This means that annular effects become more pronounced if the channel height increases and the engine diameter decreases.
 
-With the same engine characteristics as previously used, the Reynolds numbers at the chamber and throat of the engine are estimated to be $\sim 3000$ and $\sim 9000$ respectively, and the Prandtl number is estimated to be $\sim 20$. The low Reynolds numbers mean that the fuel flow is in the transition region, which means that heat transfer coefficient correlations developed for fully turbulent flow ($Re > 10,000$) can not be accurately applied.
-
-DOLPRE~\cite{huang_modern_1992} recommends the standard Sieder-Tate equation for coolant flow below boiling temperature at any pressure. This equation has been used in several papers and a similar simulation for a coaxial shell design by Oregon Tech~\cite{minar_our_2017}, however it is only accurate for fully turbulent flow. As DOLPRE recommends a pipe-flow equation, it seems reasonable that another like it could be used if the same temperature condition is met. From REFPROP, the RP-1 boiling point is approximately 500K at ambient pressure and 650 K at 1.7 MPa. \textbf{TODO: Update pressure here?} The Exxsol D40 datasheet lists a boiling point range of 162 to 202 C, presumably at ambient pressure, so a boiling point of 550K at 1.7 MPa will be used for safety. As the temperature of the inner coolant wall and the coolant directly in contact with it are the same, this means that the correlations used will be inaccurate if the wall temperature exceeds 550K. The Gnielinski equation~\cite{gnielinski_neue_1975} has been used in regenerative cooling simulations~\cite{marchi_numerical_2004}, is valid for flow in the transitional region, and can account for variable-property effects like the Sieder-Tate equation:
-
+The hydraulic diameter for an annulus when calculated using the wetted perimeter method~\cite{bergman_fundamentals_2017} is twice the channel height, $2t$. Fuel properties at each station are calculated using the REFPROP data. The annular effects were assumed to be negligible due to the low channel size. The Gnielinski equation has been used for regenerative cooling simulations~\cite{marchi_numerical_2004}, and the version with property variation~\cite{gnielinski_neue_1975} was used to calculate the coolant transfer coefficient:
 \begin{equation}
-  Nu = \frac{(f/8)(Re - 1000)Pr}{1 + 12.7(f/8)^{1/2}(Pr^{2/3} - 1)} \left[ 1 + \left( \frac{d}{L} \right)^{2/3} \right] \left( \frac{Pr}{Pr_w} \right)^{0.11}
+  Nu = \frac{(f/8)(Re - 1000)Pr}{1 + 12.7(f/8)^{1/2}(Pr^{2/3} - 1)} \left( \frac{Pr}{Pr_w} \right)^{0.11}
   \qquad
   \begin{aligned}
     0.5 & \lesssim Pr \lesssim 2000 \\
     3000 & \lesssim Re \lesssim 5 \times 10^6
   \end{aligned}
 \end{equation}
-
-\textbf{TODO: Update description} Here $Nu = h_c d / k$ (where $d$ is the hydraulic diameter and $k$ is the coolant thermal conductivity), and $f$ is the Darcy friction factor, which for smooth surfaces can be expressed by the Petukhov correlation~\cite{bergman_fundamentals_2017}:
-
+Here $f$ is the Darcy friction factor, which for smooth surfaces can be expressed by the Petukhov correlation~\cite{bergman_fundamentals_2017}:
 \begin{equation}
   f = (0.790 \ln (Re) - 1.64)^{-2} \qquad 3000 \lesssim Re \lesssim 5 \times 10^6
 \end{equation}
+Entrance effects were not considered, as the channel length is much larger than the hydraulic diameter.
 
-The heat transfer coefficient calculations shown here assume smooth walls. This seems to be a safe assumption for thermal calculations, as the engine walls will likely be kept as smooth as possible to reduce pressure drop, and increasing surface roughness will only increase the effectiveness of regenerative cooling.
+\subsection{Nucleate Boiling}
 
-These calculations also only apply to a specific range of conditions, so warnings will be included in the simulation for Reynolds numbers less than 3000 and coolant wall temperatures over 550K. The Prandtl number does not change significantly with temperature so it will very likely stay within the conditions.
+When the coolant wall temperature reaches the boiling temperature of the fuel, the fuel will begin to boil in a thin layer~\cite{kandlikar_handbook_1999}. Nucleate boiling has the potential to dramatically increase the heat transfer coefficient, but if a critical heat flux is exceeded a vapor layer can form that would cause failure of the channels~\cite{huang_modern_1992}. Not much information is available about the nucleate boiling capabilities of RP-1, as it is commonly operated at pressures above its critical pressure. Liang et al show data for nucleate boiling with kerosene at moderate heat fluxes~\cite{liang_investigation_1998}, but Rocket Propulsion Elements calls kerosene a poor coolant and includes a table that lists a low critical heat flux value~\cite[Page 320]{sutton_rocket_2017} without providing an obvious source for the data.
 
-\subsection{Coolant Heat Transfer Coefficient}
-
-Calculation of the coolant heat transfer coefficient faces two major issues. The first is that with our engine parameters the flow tends to have Reynolds numbers in the range $3000 < Re < 10,000$, but many commonly used correlations are only valid for $Re > 10,000$. The second is that the flow in the cooling channel is annular, which can change the flow behaviour if the ratio between the outer and inner diameters of the cooling channel is not close to 1. This means that annular effects become more pronounced if the channel height increases and the engine diameter decreases.
-
-The hydraulic diameter for an annulus when calculated using the wetted perimeter method~\cite{bergman_fundamentals_2017} is twice the channel height, $2t$. Fuel properties are calculated using the REFPROP data and are used to determine the Reynolds and Prandtl numbers at each station.
-
-TODO: Nucleate boiling
-
-Three different correlations are currently implemented. The Sieder-Tate equation is recommended by DOLPRE:
-
-Property variation across the boundary layer is accounted for by the last term, where $\mu_w$ is the fluid viscosity at the wall temperature.
-
+With information on nucleate boiling being so scarce and the behavior hard to predict theoretically, it is likely too risky to intentionally design for it to occur. Because of this, the regenerative channels were assumed to fail if the coolant wall temperature exceeds the boiling point of the fuel as calculated by REFPROP.
 
 \subsection{Thermal Resistance}
 The wall temperatures are calculated from the fuel temperature and the heat flow at each station. To do this, the thermal resistances for conduction through the inner liner and convection to the fuel are calculated and added in series. The thermal resistance in K/W to conduction can be given by the standard formula for the thermal resistance of a hollow cylinder,
 \begin{equation}
     R_{cond} = \frac{\ln{\left(r_2 / r_1\right)}}{2 \pi L k_w} = \frac{\ln{\left( 1 + \frac{2t}{D}\right)}}{2 \pi L k_w},
 \end{equation}
-where $D$ is the inner chamber diameter, $t$ is the wall thickness, $k_w$ is the thermal conductivity of the wall, and $L$ is the step length. Thermal resistance to convection into the fuel can be calculated by $R_{conv} = 1 / h_c A$. The area of the liner in contact with the fuel is $2 \pi (D / 2 + t) L $ so
+where $D$ is the inner chamber diameter, $t$ is the wall thickness, $k_w$ is the thermal conductivity of the wall, and $L$ is the step length. Thermal resistance to convection into the fuel can be calculated by $R_{conv} = 1 / (h_c A)$. The area of the liner in contact with the fuel is $2 \pi (D / 2 + t) L $ so
 \begin{equation}
     R_{conv} = \frac{1}{h_c 2 \pi (D/2 + t) L},
 \end{equation}
 where the parameters are the same as the conduction resistance except for the heat transfer coefficient, $h_c$.
-
+behavior
 The temperatures of the coolant side and hot gas side walls $T_{wc}$ and $T_{wg}$ can then be calculated from the coolant temperature $T_c$:
 \begin{align}
   T_{wc} & = T_c + q A R_{conv} \\
   T_{wg} & = T_c + q A (R_{conv} + R_{cond})
 \end{align}
+
+\subsection{Solution Method}
+The coolant heat transfer coefficient depends on the coolant wall temperature, and the coolant wall temperature depends on the heat transfer coefficient. Because of the assumption of constant heat flux, the heat flux and coolant temperature at each station are already known. A root finder is used to find the coolant wall temperature that would lead to the known coolant temperature. The bounds on the root finder are the fuel input temperature and its boiling point; if a solution does not exist in these bounds, then the steady-state coolant wall temperature must exceed the boiling point of the fuel.
 
 \section{Pressure Drop}
 
@@ -128,7 +112,7 @@ The Darcy friction factor $f$ is calculated differently than in Section~\ref{sec
   f & = \left[ A - \frac{(B - A)^2 }{C - 2B + A} \right]^{-2}
 \end{align}
 
-Where $\epsilon$ is the effective roughness height. These pressure drop calculations will be subject to large uncertainties, as they are being used for transition flow with Reynolds number less than 4000. The overall pressure drop is found from the sum of pressure drops calculated at each step.
+Where $\epsilon$ is the effective roughness height. These pressure drop calculations will be subject to large uncertainties, as they are being used for flow with Reynolds number less than 4000. The overall pressure drop is found from the sum of pressure drops calculated at each step.
 
 \section{Wall Stress}
 
@@ -136,9 +120,38 @@ The inner wall of a coaxial-shell regeneratively cooled engine undergoes a combi
 \begin{equation}
   S_c = \frac{(p_{co} -p_{g}) R}{t} + \frac{E \alpha q t}{2 (1 - \nu)k}
 \end{equation}
-Here $p_{co}$ is the coolant pressure, $p_g$ is the combustion pressure, $R$ is the radius, $t$ is the wall thickness, $E$ is the elastic modulus, $\alpha$ is the thermal expansion coefficient, $q$ is the heat flux, $k$ is the thermal conductivity, and $\nu$ is the Poisson's ratio.
 
 The coolant pressure is taken to be the input pressure. This is conservative and does not significantly affect the result as thermal stress dominates at the throat. Property variations with temperature likely play a significant role but are not currently implemented.
+
+\section{Downsized 2 Chamber-Only Calculations}
+
+The Feynman Downsized 2 outputs are used, and it is assumed that the channel is 2mm thick, the inner wall is 1/16 inch thick steel, and the fuel is input to the end of the chamber at 300K. This gives a flow velocity of approximately 3.3 m/s.
+
+Despite the fuel being capable of absorbing the full heat flux given by the Bartz equation, the maximum heat flux this regenerative cooling model could handle was approximately 19\% of the Bartz equation chamber heat flux. For heat fluxes above 19\%, the coolant wall temperature exceeded the boiling point of the fuel. At this heat flux, in a steady state the fuel temperature increases by only 51 degrees.
+
+Figure~\ref{fig:temperatures} shows fuel and wall temperatures at this heat flux. It may be counterintuitive that the wall temperatures decrease as the fuel temperature increases, but this effect can be understood by looking at the temperature dependence of viscosity for the fuel in Figure~\ref{fig:viscosity}. From 300K to 350K the viscosity nearly halves; this would double the Reynolds number and so increase the heat transfer coefficient.
+
+The pressure drop was calculated to be 228 kPa. At 28\% of the chamber pressure, this is double what Feynman currently specifies. The inner wall stress was calculated to be 74.3 MPa. This is well below the yield stress of steel, which doesn't change significantly at these temperatures.
+
+\section{Conclusion}
+
+If these calculations have no major errors, they indicate that the annular design does not perform very well for our application. Using nucleate boiling could possible make it feasible, but would also increase the risk of catastrophic failure. The flow velocity is too low, and the 2mm channel thickness used here is likely close to the minimum we will be able to manufacture.
+
+It may be worth channel designs such as helical channels that can provide a higher flow velocity without significantly changing the engine design, however this would come with a higher pressure drop.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\linewidth]{Temperatures.png}
+  \caption{Coolant and gas wall temperatures at 19\% of Bartz heat flux prediction.}
+  \label{fig:temperatures}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.8\linewidth]{Viscosity.png}
+  \caption{RP-1 temperature dependence of viscosity.}
+  \label{fig:viscosity}
+\end{figure}
 
 \printbibliography
 

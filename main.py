@@ -11,7 +11,8 @@ import time
 
 import inputs as inp
 import engine_geometry as geom
-from gas_properties import calc_gas_properties
+import gas_properties as gas
+import heat_flux as hf
 
 sns.set()
 sns.set_style("ticks")
@@ -56,10 +57,7 @@ def wall_temp(radius, fuel_temp, heatflux):
         try:
             coolant_wall_temperature[i] = scipy.optimize.brentq(coolant_difference, inp.fuel_input_temperature, max_temp)
         except ValueError:
-            print(radius[i])
-            print(coolant_difference(300))
-            print(coolant_difference(max_temp))
-            raise Exception("test")
+            raise Exception("Coolant wall temperature exceeded boiling point of fuel.")
 
     conduction_resistance = np.log((radius + inp.inner_wall_thickness) / radius) / (2 * np.pi * geom.station_width * inp.wall_thermal_conductivity)
     gas_wall_temperature = coolant_wall_temperature + heat_flow * conduction_resistance
@@ -129,59 +127,51 @@ def pressure_drop(radius, fuel_temp):
 
 
 def main():
+    temp = np.linspace(300, 600, 1000)
+    visc = fuel_viscosity(temp)
+    plt.plot(temp, visc, color='black')
+    plt.xlabel("Temperature (K)")
+    plt.ylabel("Viscosity (Pa s)")
+    plt.tight_layout(pad=0.5)
+    sns.despine()
+    #plt.savefig('Viscosity.png')
+    plt.show()
+
     # TODO remove station_width, directly calculate in functions
     position = np.linspace(0, geom.diverging_end, inp.num_stations, dtype=np.double)
-    chamber_only = position[position < inp.chamber_length]
+    position = position[position < inp.chamber_length]
 
-    # bartz = bartz_heat_flux(position)
-    # bartz1 = bartz_heat_flux1(position)
-    # sns.lineplot(position, bartz)
-    # sns.lineplot(position, bartz1)
-    # pressure, density, viscosity, velocity, gamma, thermal_cond, prandtl = calc_gas_properties(position)
-    # sns.lineplot(position, viscosity)
-    gas, states, mach = calc_gas_properties(position)
+    radius = geom.radius(position)
+    heat_flux = 0.19 * hf.heat_flux(position, 300)
+    fuel_temp = calc_fuel_temp(radius, heat_flux)
+    coolant_wall_temp, gas_wall_temp = wall_temp(radius, fuel_temp, heat_flux)
+    wall_stress = stress(radius, heat_flux)
+    density, viscosity, conductivity, velocity, re, pr = calc_fuel_props(radius, fuel_temp)
 
-    t_wall = 500
-
-    # temperature, pressure = states.TP
-    # density = states.density
-    # specific_heat = states.cp
-    # thermal_conductivity = states.thermal_conductivity
-    # gamma = specific_heat / states.cv
-    # viscosity = states.viscosity
-    # velocity = mach * np.sqrt(gamma * pressure / density)
-    # re = density * velocity * (2 * geom.radius(position)) / viscosity
-    # pr = specific_heat * viscosity / thermal_conductivity
+    # plt.plot(position, coolant_wall_temp, color='black', label='Coolant Wall Temperature')
+    # plt.plot(position, gas_wall_temp, color='black', label='Gas Wall Temperature', linestyle=':')
+    # plt.plot(position, fuel_temp, color='black', label='Fuel Temperature', linestyle='--')
+    # plt.xlabel('Axial Position (m)')
+    # plt.ylabel('Temperature (K)')
+    # plt.tight_layout(pad=0.5)
+    # plt.legend()
+    # sns.despine()
+    # plt.savefig('Temperatures.png')
     #
-    # states.TP = t_wall, pressure
-    # viscosity_wall = states.viscosity
-    #
-    # states.TP = (t_wall + temperature) / 2, pressure
-    # viscosity_am = states.viscosity
-    # density_am = states.density
-    # re_am = density_am * velocity * (2 * geom.radius(position)) / viscosity_am
-    # pr_am = specific_heat * viscosity_am / thermal_conductivity
-    #
-    # sieder = sieder_tate(re, pr, viscosity, viscosity_wall)
-    # dittus = dittus_boelter(re_am, pr_am)
-    #
-    # plt.plot(position, sieder)
-    # plt.plot(position, dittus)
     # plt.show()
 
-    # radius = geom.radius(position)
-    # heat_flux = scaled_heat_flux(position)
-    # fuel_temp = calc_fuel_temp(radius, heat_flux)
-    # coolant_wall_temp, gas_wall_temp = wall_temp(radius, fuel_temp, heat_flux)
-    # mach = calc_mach_number(position)
-    # wall_stress = stress(radius, heat_flux)
-    # density, viscosity, conductivity, velocity, re, pr = calc_fuel_props(radius, fuel_temp)
-    #
-    # df = pd.DataFrame({'Position': position, 'Radius': radius, 'Heat Flux': heat_flux, 'Fuel Temperature': fuel_temp,
-    #                    'Coolant Wall Temperature': coolant_wall_temp, 'Gas Wall Temperature': gas_wall_temp,
-    #                    'Mach': mach, 'Stress': wall_stress, 'Re': re})
-    # df.plot(x='Position', y='Re')
+    print(pressure_drop(radius, fuel_temp))
+    print(pressure_drop(radius, fuel_temp) / inp.chamber_pressure)
+
+    plt.plot(position, wall_stress)
+    plt.show()
+
+    # plt.plot(position, re, color='black')
+    # plt.xlabel('Axial Position (m)')
+    # plt.ylabel('Re')
+    # plt.tight_layout(pad=0.5)
     # sns.despine()
+    # plt.savefig('Reynolds.png')
     #
     # plt.show()
 
