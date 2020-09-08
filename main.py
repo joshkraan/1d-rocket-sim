@@ -142,29 +142,29 @@ def main():
     position = position[position < inp.chamber_length]
 
     radius = geom.radius(position)
-    heat_flux = 0.19 * hf.heat_flux(position, 300)
+    heat_flux = 0.09 * hf.heat_flux(position, 300)
     fuel_temp = calc_fuel_temp(radius, heat_flux)
     coolant_wall_temp, gas_wall_temp = wall_temp(radius, fuel_temp, heat_flux)
     wall_stress = stress(radius, heat_flux)
     density, viscosity, conductivity, velocity, re, pr = calc_fuel_props(radius, fuel_temp)
 
-    # plt.plot(position, coolant_wall_temp, color='black', label='Coolant Wall Temperature')
-    # plt.plot(position, gas_wall_temp, color='black', label='Gas Wall Temperature', linestyle=':')
-    # plt.plot(position, fuel_temp, color='black', label='Fuel Temperature', linestyle='--')
-    # plt.xlabel('Axial Position (m)')
-    # plt.ylabel('Temperature (K)')
-    # plt.tight_layout(pad=0.5)
-    # plt.legend()
-    # sns.despine()
-    # plt.savefig('Temperatures.png')
-    #
-    # plt.show()
+    plt.plot(position, coolant_wall_temp, color='black', label='Coolant Wall Temperature')
+    plt.plot(position, gas_wall_temp, color='black', label='Gas Wall Temperature', linestyle=':')
+    plt.plot(position, fuel_temp, color='black', label='Fuel Temperature', linestyle='--')
+    plt.xlabel('Axial Position (m)')
+    plt.ylabel('Temperature (K)')
+    plt.tight_layout(pad=0.5)
+    plt.legend()
+    sns.despine()
+    #plt.savefig('Temperatures.png')
+
+    plt.show()
 
     print(pressure_drop(radius, fuel_temp))
     print(pressure_drop(radius, fuel_temp) / inp.chamber_pressure)
 
-    plt.plot(position, wall_stress)
-    plt.show()
+    # plt.plot(position, wall_stress)
+    # plt.show()
 
     # plt.plot(position, re, color='black')
     # plt.xlabel('Axial Position (m)')
