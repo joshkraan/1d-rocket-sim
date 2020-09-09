@@ -7,6 +7,7 @@
 \usepackage{amsmath}
 \usepackage{multicol}
 \usepackage{graphicx}
+\usepackage{siunitx}
 \usepackage{float}
 \usepackage[style=ieee]{biblatex}
 \usepackage[bookmarks, unicode]{hyperref}
@@ -125,7 +126,7 @@ The coolant pressure is taken to be the input pressure. This is conservative and
 
 \section{Downsized 2 Chamber-Only Calculations}
 
-The Feynman Downsized 2 outputs are used, and it is assumed that the channel is 1 mm thick, the inner wall is 1/16 inch thick steel, and the fuel is input to the end of the chamber at 300 K. This gives a flow velocity of approximately 3.3 m/s.
+The Feynman Downsized 2 outputs are used, and it is assumed that the channel is 1 mm thick, the inner wall is 1/16 inch thick steel, and the fuel is input to the end of the chamber at 300 K. The surface roughness was taken to be \SI{7.5}{\micro\meter}. These parameters gives a flow velocity of approximately 3.3 m/s.
 
 Despite the fuel being capable of absorbing the full heat flux given by the Bartz equation, the maximum heat flux this regenerative cooling model could handle was approximately 19\% of the Bartz equation chamber heat flux. For heat fluxes above 19\%, the coolant wall temperature exceeded the boiling point of the fuel. At this heat flux, in a steady state the fuel temperature increases by only 51 degrees.
 
