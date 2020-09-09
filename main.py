@@ -142,7 +142,7 @@ def main():
     position = position[position < inp.chamber_length]
 
     radius = geom.radius(position)
-    heat_flux = 0.09 * hf.heat_flux(position, 300)
+    heat_flux = 0.19 * hf.heat_flux(position, 300)
     fuel_temp = calc_fuel_temp(radius, heat_flux)
     coolant_wall_temp, gas_wall_temp = wall_temp(radius, fuel_temp, heat_flux)
     wall_stress = stress(radius, heat_flux)

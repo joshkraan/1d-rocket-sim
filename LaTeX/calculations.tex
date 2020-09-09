@@ -125,17 +125,17 @@ The coolant pressure is taken to be the input pressure. This is conservative and
 
 \section{Downsized 2 Chamber-Only Calculations}
 
-The Feynman Downsized 2 outputs are used, and it is assumed that the channel is 2mm thick, the inner wall is 1/16 inch thick steel, and the fuel is input to the end of the chamber at 300K. This gives a flow velocity of approximately 3.3 m/s.
+The Feynman Downsized 2 outputs are used, and it is assumed that the channel is 1 mm thick, the inner wall is 1/16 inch thick steel, and the fuel is input to the end of the chamber at 300 K. This gives a flow velocity of approximately 3.3 m/s.
 
 Despite the fuel being capable of absorbing the full heat flux given by the Bartz equation, the maximum heat flux this regenerative cooling model could handle was approximately 19\% of the Bartz equation chamber heat flux. For heat fluxes above 19\%, the coolant wall temperature exceeded the boiling point of the fuel. At this heat flux, in a steady state the fuel temperature increases by only 51 degrees.
 
-Figure~\ref{fig:temperatures} shows fuel and wall temperatures at this heat flux. It may be counterintuitive that the wall temperatures decrease as the fuel temperature increases, but this effect can be understood by looking at the temperature dependence of viscosity for the fuel in Figure~\ref{fig:viscosity}. From 300K to 350K the viscosity nearly halves; this would double the Reynolds number and so increase the heat transfer coefficient.
+Figure~\ref{fig:temperatures} shows fuel and wall temperatures at this heat flux. It may be counterintuitive that the wall temperatures decrease as the fuel temperature increases, but this effect can be understood by looking at the temperature dependence of viscosity for the fuel in Figure~\ref{fig:viscosity}. From 300 K to 350 K the viscosity nearly halves; this would double the Reynolds number and so increase the heat transfer coefficient.
 
-The pressure drop was calculated to be 228 kPa. At 28\% of the chamber pressure, this is double what Feynman currently specifies. The inner wall stress was calculated to be 74.3 MPa. This is well below the yield stress of steel, which doesn't change significantly at these temperatures.
+The pressure drop was calculated to be 28.4 kPa. At 3.6\% of the chamber pressure, this is below the 15\% that Feynman currently specifies. The inner wall stress was calculated to be 74.3 MPa. This is well below the yield stress of steel, which doesn't change significantly at these temperatures.
 
 \section{Conclusion}
 
-If these calculations have no major errors, they indicate that the annular design does not perform very well for our application. Using nucleate boiling could possible make it feasible, but would also increase the risk of catastrophic failure. The flow velocity is too low, and the 2mm channel thickness used here is likely close to the minimum we will be able to manufacture.
+If these calculations have no major errors, they indicate that the annular design does not perform very well for our application. Using nucleate boiling could possible make it feasible, but would also increase the risk of catastrophic failure. The flow velocity is too low, and the 1 mm channel thickness used here is likely close to the minimum we will be able to manufacture.
 
 It may be worth channel designs such as helical channels that can provide a higher flow velocity without significantly changing the engine design, however this would come with a higher pressure drop.
 
