@@ -32,7 +32,6 @@ Regenerative cooling parameters
 inner_wall_thickness = 0.0015875  # m
 channel_height = 0.001  # m
 wall_thermal_conductivity = 50  # W / (m K)
-#surface_roughness = 0.001  # mm
 surface_roughness = 7.5e-6  # m
 fuel_input_temperature = 300  # K
 

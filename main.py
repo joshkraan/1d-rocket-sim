@@ -127,15 +127,15 @@ def pressure_drop(radius, fuel_temp):
 
 
 def main():
-    temp = np.linspace(300, 600, 1000)
-    visc = fuel_viscosity(temp)
-    plt.plot(temp, visc, color='black')
-    plt.xlabel("Temperature (K)")
-    plt.ylabel("Viscosity (Pa s)")
-    plt.tight_layout(pad=0.5)
-    sns.despine()
-    #plt.savefig('Viscosity.png')
-    plt.show()
+    # temp = np.linspace(300, 600, 1000)
+    # visc = fuel_viscosity(temp)
+    # plt.plot(temp, visc, color='black')
+    # plt.xlabel("Temperature (K)")
+    # plt.ylabel("Viscosity (Pa s)")
+    # plt.tight_layout(pad=0.5)
+    # sns.despine()
+    # #plt.savefig('Viscosity.png')
+    # plt.show()
 
     # TODO remove station_width, directly calculate in functions
     position = np.linspace(0, geom.diverging_end, inp.num_stations, dtype=np.double)

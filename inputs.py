@@ -1,7 +1,8 @@
 # Specify inputs in a separate file and import them here
-# downsized2.py and mk4.py are the only 2 in the currently supported format
-# TODO work on a better way of inputting parameters
+# output9.py, output10.py, and mk4.py are the only files in the currently supported format
 
-from downsized2 import *
+# from output9 import *  # Downsizing 1
+
+from output10 import *  # Downsizing 2
 
 # from mk4 import *
