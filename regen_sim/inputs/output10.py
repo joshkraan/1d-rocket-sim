@@ -19,13 +19,16 @@ lox_flow_rate = 4.09597849  # kg/s
 
 # Design chamber pressure (Feynman)
 # Used as initial estimate
-chamber_pressure = 770000  # Pa
+chamber_pressure = 770e3  # Pa
 
 """
 Regenerative cooling parameters
 """
+helical_channels = True
+helix_pitch = 5e-2  # m
+
 inner_wall_thickness = 0.0015875  # m
-channel_height = 0.001  # m
+channel_height = 0.004  # m
 wall_thermal_conductivity = 50  # W / (m K)
 surface_roughness = 7.5e-6  # m
 fuel_input_temperature = 300  # K
