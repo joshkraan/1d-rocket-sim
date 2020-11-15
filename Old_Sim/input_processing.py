@@ -35,7 +35,8 @@ gas_viscosity = inputs.viscosity / 10000  # Pa s
 gas_specific_heat = inputs.specific_heat * 1000  # J / (kg K)
 gas_prandtl_number = inputs.prandtl_number  # unitless
 
-characteristic_velocity = chamber_pressure * math.pi * throat_radius ** 2 / (inputs.fuel_flow_rate + inputs.ox_flow_rate)  # m/s
+characteristic_velocity = chamber_pressure * math.pi * throat_radius ** 2 / (
+            inputs.fuel_flow_rate + inputs.ox_flow_rate)  # m/s
 
 """
 Bounds separating sections of chamber

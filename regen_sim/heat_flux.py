@@ -1,5 +1,4 @@
 import numpy as np
-import seaborn as sns
 import matplotlib.pyplot as plt
 import cantera as ct
 
@@ -83,7 +82,7 @@ def bartz(pos, gas, velocity, gas_wall_temp):
 
 def bartz_free_stream(pos, gas, states, velocity, gas_wall_temp):
 
-    am_gas = ct.Solution("lox_kero.cti")
+    am_gas = ct.Solution(inp.cantera_properties_file)
     am_gas.basis = "mass"
     am_states = ct.SolutionArray(am_gas, pos.size)
     am_states.TPX = (states.T + gas_wall_temp) / 2, states.P, states.X
@@ -99,7 +98,7 @@ def bartz_free_stream(pos, gas, states, velocity, gas_wall_temp):
 
 
 def dittus_boelter(pos, states, velocity, gas_wall_temp):
-    am_gas = ct.Solution("lox_kero.cti")
+    am_gas = ct.Solution(inp.cantera_properties_file)
     am_gas.basis = "mass"
     am_states = ct.SolutionArray(am_gas, pos.size)
     am_states.TPX = (states.T + gas_wall_temp) / 2, states.P, states.X
@@ -114,7 +113,7 @@ def dittus_boelter(pos, states, velocity, gas_wall_temp):
 
 def sieder_tate(pos, states, velocity, gas_wall_temp):
 
-    wall_gas = ct.Solution("lox_kero.cti")
+    wall_gas = ct.Solution(inp.cantera_properties_file)
     wall_gas.basis = "mass"
     wall_states = ct.SolutionArray(wall_gas, pos.size)
     wall_states.TPX = gas_wall_temp, states.P, states.X
@@ -131,7 +130,7 @@ def sieder_tate(pos, states, velocity, gas_wall_temp):
 #TODO fix infinity at 0
 def colburn(pos, states, velocity, gas_wall_temp, effective_position):
 
-    am_gas = ct.Solution("lox_kero.cti")
+    am_gas = ct.Solution(inp.cantera_properties_file)
     am_gas.basis = "mass"
     am_states = ct.SolutionArray(am_gas, pos.size)
     am_states.TPX = (states.T + gas_wall_temp) / 2, states.P, states.X

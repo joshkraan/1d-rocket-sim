@@ -14,7 +14,7 @@ sns.set_style("ticks")
 def calc_gas_properties(pos, lox_flow_rate=inp.lox_flow_rate, fuel_flow_rate=inp.fuel_flow_rate):
     stagnation_gas, throat_pressure = solve_chamber_throat(lox_flow_rate, fuel_flow_rate)
 
-    gas = ct.Solution('lox_kero.cti')
+    gas = ct.Solution(inp.cantera_properties_file)
     gas.basis = "mass"
     gas.state = stagnation_gas.state
     states = ct.SolutionArray(gas)
@@ -50,11 +50,11 @@ def calc_gas_properties(pos, lox_flow_rate=inp.lox_flow_rate, fuel_flow_rate=inp
 
 def calc_mole_fractions(pos, of):
 
-    stagnation_gas = ct.Solution('lox_kero.cti')
+    stagnation_gas = ct.Solution(inp.cantera_properties_file)
     stagnation_gas.basis = "mass"
     stagnation_states = ct.SolutionArray(stagnation_gas)
 
-    gas = ct.Solution('lox_kero.cti')
+    gas = ct.Solution(inp.cantera_properties_file)
     gas.basis = "mass"
     states = ct.SolutionArray(gas)
 
@@ -94,10 +94,10 @@ def calc_mole_fractions(pos, of):
 
 
 def solve_chamber_throat(lox_flow_rate, fuel_flow_rate):
-    gas = ct.Solution('lox_kero.cti')
+    gas = ct.Solution(inp.cantera_properties_file)
     gas.basis = "mass"
 
-    gas_t = ct.Solution('lox_kero.cti')
+    gas_t = ct.Solution(inp.cantera_properties_file)
     gas_t.basis = "mass"
 
     of = lox_flow_rate / fuel_flow_rate
@@ -135,7 +135,7 @@ def solve_chamber_throat(lox_flow_rate, fuel_flow_rate):
 
 
 def sound_speed(gas):
-    perturbed_gas = ct.Solution('lox_kero.cti')
+    perturbed_gas = ct.Solution(inp.cantera_properties_file)
     perturbed_gas.basis = "mass"
 
     perturbed_gas.state = gas.state
