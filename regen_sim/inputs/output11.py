@@ -1,35 +1,35 @@
-# Downsizing 2 inputs
+# Feynman output sheet 11
 
 """
 General engine parameters
 """
 
 # Chamber dimensions. All units are meters and degrees.
-exit_diameter = 0.197395626
-throat_diameter = 0.127418329
+exit_diameter = 0.17648
+throat_diameter = 0.1094509
 diverging_half_angle = 15
 converging_half_angle = 30
-chamber_length = 0.318112147
-chamber_diameter = 0.220238596
+chamber_length = 0.30389667
+chamber_diameter = 0.1943647
 throat_bevel_radius = 0.05
 chamber_bevel_radius = 0.02
 
-fuel_flow_rate = 1.788636895  # kg/s
-lox_flow_rate = 4.09597849  # kg/s
+fuel_flow_rate = 1.814516  # kg/s
+lox_flow_rate = 3.81048  # kg/s
 
 # Design chamber pressure (Feynman)
 # Used as initial estimate
-chamber_pressure = 770e3  # Pa
+chamber_pressure = 1e6  # Pa
 
 """
 Regenerative cooling parameters
 """
 helical_channels = True
-helix_pitch = 9e-2  # m
+helix_pitch = 8e-2  # m
 helix_number = 1
 
 inner_wall_thickness = 0.0015875  # m
-channel_height = 0.004  # m
+channel_height = 3e-3  # m
 wall_thermal_conductivity = 50  # W / (m K)
 surface_roughness = 7.5e-6  # m
 fuel_input_temperature = 300  # K
@@ -38,7 +38,7 @@ fuel_input_temperature = 300  # K
 # Pressure should be constant and temperature varied.
 # A CSV file with columns titled Temperature, Density, Specific Heat, Thermal Conductivity, Viscosity, Enthalpy.
 # Standard SI units with no prefixes should be used.
-fuel_properties_name = "Kerosene_11E5Pa.csv"
+fuel_properties_name = "Kerosene_12E5Pa.csv"
 
 """
 Inputs for stress calculations

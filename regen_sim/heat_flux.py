@@ -168,6 +168,9 @@ def main():
     plt.plot(position, heat_flux(position, 300))
     plt.show()
 
+    gas, states, velocity = calc_gas_properties(position)
+    # print(np.sum(states.density * np.pi * geom.radius(position) ** 2 * geom.station_width))
+
     # Commented code below was used to produce graphs in heat flux documentation.
 
     # gas, states, velocity = calc_gas_properties(position)

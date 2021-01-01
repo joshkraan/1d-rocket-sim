@@ -86,7 +86,7 @@ def calc_fuel_props(radius, heat_flux):
 
     if inp.helical_channels is True:
         hydraulic_diameter = 2 * inp.helix_pitch * inp.channel_height / (inp.helix_pitch + inp.channel_height)
-        area = inp.helix_pitch * inp.channel_height
+        area = inp.helix_number * inp.helix_pitch * inp.channel_height
     else:
         hydraulic_diameter = 2 * inp.channel_height
         area = np.pi * (radius + inp.inner_wall_thickness + inp.channel_height) ** 2 - np.pi * (
@@ -115,7 +115,7 @@ def pressure_drop(radius, fuel_props):
 
     if inp.helical_channels is True:
         delta_l = geom.station_width * \
-                  (1 + 2 * np.pi * (radius + inp.inner_wall_thickness * inp.channel_height / 2) / inp.helix_pitch)
+                  (1 + 2 * np.pi * (radius + inp.inner_wall_thickness + inp.channel_height / 2) / (inp.helix_number * inp.helix_pitch))
     else:
         delta_l = geom.station_width
 
@@ -129,26 +129,28 @@ def pressure_drop(radius, fuel_props):
 
 def main():
 
-    # TODO pressure drop effect on boiling point (properties at exit not inlet)
-
     position = np.arange(0, inp.chamber_length, geom.station_width, dtype=np.double)
 
     radius = geom.radius(position)
-    # heat_flux = 885e3 #0.19 * hf.heat_flux(position, 300)
-    heat_flux = 0.7 * hf.heat_flux(position, 700)
+    heat_flux = 0.6 * hf.heat_flux(position, 700)
+
     fuel_props = calc_fuel_props(radius, heat_flux)
     coolant_wall_temp, gas_wall_temp = wall_temp(radius, fuel_props, heat_flux)
-    # wall_stress = stress(radius, heat_flux)
+    #wall_stress = stress(radius, heat_flux)
 
-    plt.plot(position, coolant_wall_temp, color='black', label='Coolant Wall Temperature')
-    plt.plot(position, gas_wall_temp, color='black', label='Gas Wall Temperature', linestyle=':')
-    plt.plot(position, fuel_props[0], color='black', label='Fuel Temperature', linestyle='--')
+    plt.plot(position, coolant_wall_temp, color='black', label='Coolant Wall')
+    plt.plot(position, gas_wall_temp, color='black', label='Gas Wall', linestyle=':')
+    plt.plot(position, fuel_props[0], color='black', label='Fuel', linestyle='--')
+
+    plt.scatter([0, 0.26, 0.11], [611, 654, 600], color='red', label='High ANSYS Coolant Wall')
+    plt.scatter([0, 0.26, 0.11], [554, 625, 560.5], color='blue', label='Low ANSYS Coolant Wall')
+
     plt.xlabel('Axial Position (m)')
     plt.ylabel('Temperature (K)')
     plt.tight_layout(pad=0.5)
     plt.legend()
     sns.despine()
-    #plt.savefig('Temperatures.png')
+    #plt.savefig('Temperatures_3mm.png')
 
     print("Pressure drop = " + str(pressure_drop(radius, fuel_props) / 1e3) + " kPa")
 
