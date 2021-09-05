@@ -1,5 +1,5 @@
 import importlib_resources
-from regen_sim.inputs.output11 import *
+from regen_sim.inputs.output12 import *
 
 cantera_properties_name = "lox_kero.cti"
 num_stations = 1000

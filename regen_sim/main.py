@@ -47,7 +47,7 @@ def wall_temp(radius, fuel_props, heatflux):
                                                                      bracket=[inp.fuel_input_temperature, max_temp],
                                                                      method='brentq').root
         except ValueError:
-            raise Exception("Coolant wall temperature exceeded boiling point of fuel.")
+            raise Exception("Coolant wall temperature exceeded boiling point of fuel. {}".format(i))
 
     conduction_resistance = np.log((radius + inp.inner_wall_thickness) / radius) / (2 * np.pi * geom.station_width * inp.wall_thermal_conductivity)
     gas_wall_temperature = coolant_wall_temperature + heat_flow * conduction_resistance
@@ -129,10 +129,12 @@ def pressure_drop(radius, fuel_props):
 
 def main():
 
+    # TODO: Note that chamber-only cooling is being simulated below
     position = np.arange(0, inp.chamber_length, geom.station_width, dtype=np.double)
 
     radius = geom.radius(position)
-    heat_flux = 0.6 * hf.heat_flux(position, 700)
+    # TODO: Note that heat flux is artificially reduced below
+    heat_flux = 0.3*hf.heat_flux(position, 300)
 
     fuel_props = calc_fuel_props(radius, heat_flux)
     coolant_wall_temp, gas_wall_temp = wall_temp(radius, fuel_props, heat_flux)

@@ -59,9 +59,9 @@ Analysis with ANSYS Fluent was conducted to double-check 1-dimensional calculati
   	\label{fig:ansys_geom}
 \end{figure}
 
-One important detail that was neglected in the 1-dimensional simulation is the effect of the spacer. The spacer slightly reduces the flow area, and slows the fluids in gaps near it, potentially leading to hot spots.
+One important detail that was neglected in the 1-dimensional simulation but is included in the ANSYS simulation is the effect of the spacer. The spacer slightly reduces the flow area, and slows the fluids in gaps near it, potentially leading to hot spots.
 
-For this comparison between ANSYS and the 1-dimensional simulation, a \SI{3}{\milli\meter} channel with an axial pitch of \SI{8}{\centi\meter} and a heat flux of 60\% of predicted.
+For this comparison between ANSYS and the 1-dimensional simulation, a \SI{3}{\milli\meter} channel with an axial pitch of \SI{8}{\centi\meter} and a heat flux of 60\% of predicted was used.
 
 Entrance effects were found to be significant, as can be seen in Figure~\ref{fig:entrance}, but disappeared about halfway through the channel length. Helical flow effects are also clearly visible in Figure~\ref{fig:helical}. While 1-dimensional calculations predict a flow velocity of approximately \SI{10}{\meter\per\second}, in the ANSYS simulation one side has a velocity of \SI{7}{\meter\per\second} and the other \SI{14}{\meter\per\second}.
 
@@ -122,15 +122,15 @@ To compare the ANSYS results to the 1-dimensional calculations, 3 ANSYS simulati
   	\label{fig:comparison}
 \end{figure}
 
-The highest coolant wall temperature calculated by ANSYS for the 2 locations closest to the injector is quite close to the 1-dimensional calculations. This could be because of reduced flow area (and decreased temperature) due to to the spacer volume combined with increased temperature due to the local flow restriction of the spacer gap.
+The highest coolant wall temperatures calculated by ANSYS for the 2 locations closest to the injector are quite close to the 1-dimensional calculations. This could be because of reduced flow area (and decreased temperature) due to to the spacer volume combined with increased temperature due to the local flow restriction of the spacer gap.
 
-The point closest to the coolant inlet is significantly higher than what was calculated. As the temperature is beyond the boiling point of the fluid it was produced by extrapolating the tabulated fluid properties, which means this result cannot be trusted.
+The point closest to the coolant inlet is significantly higher than what was calculated. As the temperature is beyond the boiling point of the fluid, it was produced by extrapolating the tabulated fluid properties. This means this result cannot be trusted, however it could indicate inaccuracies in the model which physical testing may pinpoint.
 
 \section{Inner Wall Temperature Limits}
 
-Simulations so far have focused on the inner wall temperature where boiling occurs as a limit, but it is quite likely that buckling of the inner wall would put a limit on the temperature that it can handle. As the system encounters higher heat fluxes the temperature gradient in the wall will increase, and at some point it will likely become limiting.
+Simulations so far have focused on the inner wall temperature where boiling occurs as a limit, but it is quite likely that buckling of the inner wall would put a limit on the temperature that it can handle. As the system encounters higher heat fluxes the temperature gradient in the wall will increase, at some point it will likely become limiting.
 
-A thermal conductivity of \SI{50}{\watt\per\meter\per\kelvin} has been used for these calculations, which seems to be clos to the upper range of thermal conductivities for typical steels. Reducing this thermal conductivity would significantly increase the gas wall temperature.
+A thermal conductivity of \SI{50}{\watt\per\meter\per\kelvin} has been used for these calculations, which seems to be close to the upper range of thermal conductivities for typical steels. Reducing this thermal conductivity would significantly increase the gas wall temperature.
 
 \section{Conclusion}
 
@@ -138,7 +138,7 @@ The helical channel design was shown to be theoretically capable of handling muc
 
 Even when using the entire allotted channel pressure drop for the chamber alone, film cooling would be required to keep the fuel from boiling. Additionally, at higher heat fluxes the steel wall would likely have to be replaced with a higher thermal conductivity material such as copper.
 
-It seems likely that regenerative cooling will be very difficult to accomplish unless the heat flux is much lower than predicted, film cooling performs very well, or some kind of thermal barrier coating is applied to the engine walls.
+It seems likely that regenerative cooling will not be possible unless the heat flux is much lower than predicted, film cooling performs very well, or some kind of thermal barrier coating is applied to the engine walls.
 
 
 \end{document}
