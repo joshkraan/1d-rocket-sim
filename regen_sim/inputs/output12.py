@@ -30,7 +30,7 @@ chamber_pressure = 900e3  # Pa
 """
 Regenerative cooling parameters
 """
-helical_channels = False
+helical_channels = True
 helix_pitch = 7.6e-2  # m
 helix_number = 1
 

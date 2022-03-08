@@ -133,6 +133,8 @@ def main():
     position = np.arange(0, inp.chamber_length, geom.station_width, dtype=np.double)
 
     radius = geom.radius(position)
+    heat_flow = np.sum(2 * np.pi * radius * hf.heat_flux(position, 300) * geom.station_width)
+    print("Heat flow = {:e} W".format(heat_flow))
     # TODO: Note that heat flux is artificially reduced below
     heat_flux = 0.3*hf.heat_flux(position, 300)
 
@@ -144,8 +146,8 @@ def main():
     plt.plot(position, gas_wall_temp, color='black', label='Gas Wall', linestyle=':')
     plt.plot(position, fuel_props[0], color='black', label='Fuel', linestyle='--')
 
-    plt.scatter([0, 0.26, 0.11], [611, 654, 600], color='red', label='High ANSYS Coolant Wall')
-    plt.scatter([0, 0.26, 0.11], [554, 625, 560.5], color='blue', label='Low ANSYS Coolant Wall')
+    # plt.scatter([0, 0.26, 0.11], [611, 654, 600], color='red', label='High ANSYS Coolant Wall')
+    # plt.scatter([0, 0.26, 0.11], [554, 625, 560.5], color='blue', label='Low ANSYS Coolant Wall')
 
     plt.xlabel('Axial Position (m)')
     plt.ylabel('Temperature (K)')
